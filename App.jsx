@@ -3,14 +3,15 @@ import { createClient } from "@supabase/supabase-js";
 
 /* =========================
    SUPABASE CONFIG (VITE)
-   Add these in Vercel:
+   REQUIRED IN VERCEL ENV VARS:
    VITE_SUPABASE_URL
    VITE_SUPABASE_ANON_KEY
 ========================= */
+
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-/* Safe client init */
+/* Safe fallback to prevent build crash */
 const supabase =
   supabaseUrl && supabaseAnonKey
     ? createClient(supabaseUrl, supabaseAnonKey)
@@ -31,12 +32,12 @@ export default function App() {
 
   /* LOAD MENU */
   useEffect(() => {
-    fetchMenu();
+    loadMenu();
   }, [venue]);
 
-  async function fetchMenu() {
+  async function loadMenu() {
     if (!supabase) {
-      setError("Supabase not configured in environment variables");
+      setError("Missing Supabase environment variables in Vercel");
       setLoading(false);
       return;
     }
@@ -44,14 +45,14 @@ export default function App() {
     setLoading(true);
     setError(null);
 
-    const { data, error: fetchError } = await supabase
+    const { data, error } = await supabase
       .from("menu_items")
       .select("*")
       .eq("venue_id", venue)
       .eq("available", true);
 
-    if (fetchError) {
-      console.error(fetchError);
+    if (error) {
+      console.error(error);
       setError("Failed to load menu");
     } else {
       setMenu(data || []);
@@ -72,8 +73,8 @@ export default function App() {
 
   /* CHECKOUT */
   async function checkout() {
-    if (!supabase) return alert("Supabase not connected");
-    if (!table) return alert("Please enter table number");
+    if (!supabase) return alert("Supabase not configured");
+    if (!table) return alert("Enter table number");
     if (cart.length === 0) return alert("Cart is empty");
 
     const { data: order, error: orderError } = await supabase
@@ -106,7 +107,7 @@ export default function App() {
 
     if (itemsError) {
       console.error(itemsError);
-      alert("Order created but items failed");
+      alert("Order created but items failed to save");
     } else {
       alert("✅ Order sent successfully");
       setCart([]);
@@ -122,7 +123,7 @@ export default function App() {
         <p>Venue: {venue}</p>
       </div>
 
-      {/* TABLE INPUT */}
+      {/* TABLE */}
       <input
         style={styles.input}
         placeholder="Table number"
