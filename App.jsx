@@ -5,8 +5,8 @@ import { createClient } from "@supabase/supabase-js";
    SUPABASE (ONLY EDIT THIS)
 ========================= */
 const supabase = createClient(
-  https://yotgjvtivoyfpdwhrud.supabase.co,
- sb_publishable_jBiQXRHMmmfLZtOipmWp9A_iDJEiYMl
+  "https://yotgjvtivoyfpdwhrud.supabase.co",
+  "sb_publishable_jBiQXRHMmmfLZtOipmWp9A_iDJEiYMl"
 );
 
 /* =========================
