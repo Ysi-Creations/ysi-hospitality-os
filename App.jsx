@@ -1,135 +1,77 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 
 /* =========================
-   SUPABASE CONFIG
+   SUPABASE (LOCKED SIMPLE MODE)
+   👉 PUT VALUES DIRECTLY FOR STABILITY
 ========================= */
 
-const supabaseUrl = import.meta.env?.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env?.VITE_SUPABASE_ANON_KEY;
-
-const supabase =
-  supabaseUrl && supabaseAnonKey
-    ? createClient(supabaseUrl, supabaseAnonKey)
-    : null;
+const supabase = createClient(
+  "https://yotgjvtivoyfpdwhrud.supabase.co",
+  "sb_publishable_jBiQXRHMmmfLZtOipmWp9A_iDJEiYMl"
+);
 
 /* =========================
-   APP
+   APP (MINIMAL WORKING CORE)
 ========================= */
 
 export default function App() {
-  const [menu, setMenu] = useState([]);
+  const [menu] = useState([
+    { id: 1, name: "Burger", price: 8, station: "kitchen" },
+    { id: 2, name: "Fries", price: 4, station: "kitchen" },
+    { id: 3, name: "Coke", price: 3, station: "bar" }
+  ]);
+
   const [cart, setCart] = useState([]);
   const [table, setTable] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [venue, setVenue] = useState("default");
 
-  /* SAFE VENUE (fixes SSR crash) */
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const v =
-        new URLSearchParams(window.location.search).get("venue") || "default";
-      setVenue(v);
-    }
-  }, []);
-
-  /* LOAD MENU */
-  useEffect(() => {
-    loadMenu();
-  }, [venue]);
-
-  async function loadMenu() {
-    if (!supabase) {
-      setError("Missing Supabase environment variables in Vercel");
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    const { data, error } = await supabase
-      .from("menu_items")
-      .select("*")
-      .eq("venue_id", venue)
-      .eq("available", true);
-
-    if (error) {
-      console.error(error);
-      setError("Failed to load menu");
-    } else {
-      setMenu(data || []);
-    }
-
-    setLoading(false);
-  }
-
-  function addToCart(item) {
+  function add(item) {
     setCart((prev) => [...prev, item]);
   }
 
-  function removeFromCart(index) {
+  function remove(index) {
     const copy = [...cart];
     copy.splice(index, 1);
     setCart(copy);
   }
 
-  /* CHECKOUT */
   async function checkout() {
-    if (!supabase) return alert("Supabase not configured");
     if (!table) return alert("Enter table number");
-    if (cart.length === 0) return alert("Cart is empty");
+    if (cart.length === 0) return alert("Cart empty");
 
-    const { data: order, error: orderError } = await supabase
+    const { data: order, error } = await supabase
       .from("orders")
       .insert({
-        venue_id: venue,
+        venue_id: "default",
         table_number: table,
         status: "pending",
-        payment_status: "unpaid",
+        payment_status: "unpaid"
       })
       .select()
       .single();
 
-    if (orderError) {
-      console.error(orderError);
-      return alert("Order failed");
-    }
+    if (error) return alert("Order failed");
 
     const items = cart.map((i) => ({
       order_id: order.id,
-      venue_id: venue,
+      venue_id: "default",
       item_name: i.name,
-      price: Number(i.price) || 0,
-      station: i.station || "kitchen",
+      price: i.price,
+      station: i.station
     }));
 
-    const { error: itemsError } = await supabase
-      .from("order_items")
-      .insert(items);
+    await supabase.from("order_items").insert(items);
 
-    if (itemsError) {
-      console.error(itemsError);
-      alert("Order created but items failed to save");
-    } else {
-      alert("✅ Order sent successfully");
-      setCart([]);
-      setTable("");
-    }
+    alert("Order sent");
+    setCart([]);
+    setTable("");
   }
 
-  const total = cart.reduce((s, i) => s + (Number(i.price) || 0), 0);
-
   return (
-    <div style={styles.page}>
-      <div style={styles.header}>
-        <h2>🍽 YSI Hospitality</h2>
-        <p>Venue: {venue}</p>
-      </div>
+    <div style={{ fontFamily: "Arial", padding: 20 }}>
+      <h2>YSI Hospitality (Locked Version)</h2>
 
       <input
-        style={styles.input}
         placeholder="Table number"
         value={table}
         onChange={(e) => setTable(e.target.value)}
@@ -137,100 +79,25 @@ export default function App() {
 
       <h3>Menu</h3>
 
-      {loading && <p>Loading menu...</p>}
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      {!loading && !error && (
-        <div style={styles.grid}>
-          {menu.map((item) => (
-            <div key={item.id} style={styles.card}>
-              <h4>{item.name}</h4>
-              <p>£{item.price}</p>
-              <small>{item.station}</small>
-              <button onClick={() => addToCart(item)}>Add</button>
-            </div>
-          ))}
+      {menu.map((item) => (
+        <div key={item.id} style={{ marginBottom: 10 }}>
+          {item.name} - £{item.price}
+          <button onClick={() => add(item)}> + </button>
         </div>
-      )}
+      ))}
 
-      <h3>Cart ({cart.length})</h3>
+      <h3>Cart</h3>
 
-      {cart.length === 0 ? (
-        <p>Cart empty</p>
-      ) : (
-        cart.map((item, i) => (
-          <div key={i} style={styles.cartItem}>
-            <span>
-              {item.name} - £{item.price}
-            </span>
-            <button onClick={() => removeFromCart(i)}>X</button>
-          </div>
-        ))
-      )}
+      {cart.map((item, i) => (
+        <div key={i}>
+          {item.name} - £{item.price}
+          <button onClick={() => remove(i)}>X</button>
+        </div>
+      ))}
 
-      {cart.length > 0 && (
-        <>
-          <h4>Total: £{total}</h4>
-          <button style={styles.checkout} onClick={checkout}>
-            Confirm Order
-          </button>
-        </>
-      )}
+      <h4>Total: £{cart.reduce((s, i) => s + i.price, 0)}</h4>
+
+      <button onClick={checkout}>Confirm Order</button>
     </div>
   );
 }
-
-/* =========================
-   STYLES
-========================= */
-
-const styles = {
-  page: {
-    fontFamily: "Arial, sans-serif",
-    padding: 20,
-    background: "#f4f4f4",
-    minHeight: "100vh",
-  },
-  header: {
-    background: "#111",
-    color: "white",
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 20,
-  },
-  input: {
-    width: "100%",
-    padding: 12,
-    marginBottom: 20,
-    borderRadius: 8,
-    border: "1px solid #ccc",
-  },
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
-    gap: 12,
-  },
-  card: {
-    background: "white",
-    padding: 12,
-    borderRadius: 10,
-    textAlign: "center",
-  },
-  cartItem: {
-    display: "flex",
-    justifyContent: "space-between",
-    padding: 10,
-    background: "white",
-    marginBottom: 8,
-    borderRadius: 8,
-  },
-  checkout: {
-    width: "100%",
-    padding: 14,
-    background: "green",
-    color: "white",
-    border: "none",
-    borderRadius: 8,
-    marginTop: 10,
-  },
-};
