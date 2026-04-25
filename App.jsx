@@ -2,16 +2,12 @@ import React, { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 
 /* =========================
-   SUPABASE CONFIG (VITE)
-   REQUIRED IN VERCEL ENV VARS:
-   VITE_SUPABASE_URL
-   VITE_SUPABASE_ANON_KEY
+   SUPABASE CONFIG
 ========================= */
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env?.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env?.VITE_SUPABASE_ANON_KEY;
 
-/* Safe fallback to prevent build crash */
 const supabase =
   supabaseUrl && supabaseAnonKey
     ? createClient(supabaseUrl, supabaseAnonKey)
@@ -20,15 +16,23 @@ const supabase =
 /* =========================
    APP
 ========================= */
+
 export default function App() {
   const [menu, setMenu] = useState([]);
   const [cart, setCart] = useState([]);
   const [table, setTable] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [venue, setVenue] = useState("default");
 
-  const venue =
-    new URLSearchParams(window.location.search).get("venue") || "default";
+  /* SAFE VENUE (fixes SSR crash) */
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const v =
+        new URLSearchParams(window.location.search).get("venue") || "default";
+      setVenue(v);
+    }
+  }, []);
 
   /* LOAD MENU */
   useEffect(() => {
@@ -97,7 +101,7 @@ export default function App() {
       order_id: order.id,
       venue_id: venue,
       item_name: i.name,
-      price: i.price,
+      price: Number(i.price) || 0,
       station: i.station || "kitchen",
     }));
 
@@ -115,15 +119,15 @@ export default function App() {
     }
   }
 
+  const total = cart.reduce((s, i) => s + (Number(i.price) || 0), 0);
+
   return (
     <div style={styles.page}>
-      {/* HEADER */}
       <div style={styles.header}>
         <h2>🍽 YSI Hospitality</h2>
         <p>Venue: {venue}</p>
       </div>
 
-      {/* TABLE */}
       <input
         style={styles.input}
         placeholder="Table number"
@@ -131,7 +135,6 @@ export default function App() {
         onChange={(e) => setTable(e.target.value)}
       />
 
-      {/* MENU */}
       <h3>Menu</h3>
 
       {loading && <p>Loading menu...</p>}
@@ -150,7 +153,6 @@ export default function App() {
         </div>
       )}
 
-      {/* CART */}
       <h3>Cart ({cart.length})</h3>
 
       {cart.length === 0 ? (
@@ -168,10 +170,7 @@ export default function App() {
 
       {cart.length > 0 && (
         <>
-          <h4>
-            Total: £{cart.reduce((s, i) => s + (i.price || 0), 0)}
-          </h4>
-
+          <h4>Total: £{total}</h4>
           <button style={styles.checkout} onClick={checkout}>
             Confirm Order
           </button>
@@ -184,6 +183,7 @@ export default function App() {
 /* =========================
    STYLES
 ========================= */
+
 const styles = {
   page: {
     fontFamily: "Arial, sans-serif",
