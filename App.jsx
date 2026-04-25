@@ -2,19 +2,16 @@ import React, { useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 
 /* =========================
-   SUPABASE (LOCKED SIMPLE MODE)
-   👉 PUT VALUES DIRECTLY FOR STABILITY
+   SUPABASE (FIXED — NO SYNTAX ERRORS)
 ========================= */
-
 const supabase = createClient(
   "https://yotgjvtivoyfpdwhrud.supabase.co",
   "sb_publishable_jBiQXRHMmmfLZtOipmWp9A_iDJEiYMl"
 );
 
 /* =========================
-   APP (MINIMAL WORKING CORE)
+   APP (MINIMAL STABLE VERSION)
 ========================= */
-
 export default function App() {
   const [menu] = useState([
     { id: 1, name: "Burger", price: 8, station: "kitchen" },
@@ -50,7 +47,10 @@ export default function App() {
       .select()
       .single();
 
-    if (error) return alert("Order failed");
+    if (error) {
+      console.error(error);
+      return alert("Order failed");
+    }
 
     const items = cart.map((i) => ({
       order_id: order.id,
@@ -60,16 +60,23 @@ export default function App() {
       station: i.station
     }));
 
-    await supabase.from("order_items").insert(items);
+    const { error: itemError } = await supabase
+      .from("order_items")
+      .insert(items);
 
-    alert("Order sent");
-    setCart([]);
-    setTable("");
+    if (itemError) {
+      console.error(itemError);
+      alert("Order saved but items failed");
+    } else {
+      alert("Order sent successfully");
+      setCart([]);
+      setTable("");
+    }
   }
 
   return (
     <div style={{ fontFamily: "Arial", padding: 20 }}>
-      <h2>YSI Hospitality (Locked Version)</h2>
+      <h2>YSI Hospitality (Stable Build)</h2>
 
       <input
         placeholder="Table number"
