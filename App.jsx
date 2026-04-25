@@ -2,16 +2,19 @@ import React, { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 
 /* =========================
-   SUPABASE CONFIG (from Vercel Env Vars)
+   SUPABASE CONFIG (VITE)
+   Add these in Vercel:
+   VITE_SUPABASE_URL
+   VITE_SUPABASE_ANON_KEY
 ========================= */
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY; // or publishable key
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error("Missing Supabase environment variables");
-}
-
-const supabase = createClient(supabaseUrl || "", supabaseAnonKey || "");
+/* Safe client init */
+const supabase =
+  supabaseUrl && supabaseAnonKey
+    ? createClient(supabaseUrl, supabaseAnonKey)
+    : null;
 
 /* =========================
    APP
@@ -23,7 +26,8 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const venue = new URLSearchParams(window.location.search).get("venue") || "default";
+  const venue =
+    new URLSearchParams(window.location.search).get("venue") || "default";
 
   /* LOAD MENU */
   useEffect(() => {
@@ -31,8 +35,8 @@ export default function App() {
   }, [venue]);
 
   async function fetchMenu() {
-    if (!supabaseUrl || !supabaseAnonKey) {
-      setError("Supabase configuration is missing. Check environment variables.");
+    if (!supabase) {
+      setError("Supabase not configured in environment variables");
       setLoading(false);
       return;
     }
@@ -48,15 +52,16 @@ export default function App() {
 
     if (fetchError) {
       console.error(fetchError);
-      setError("Failed to load menu. Please try again later.");
+      setError("Failed to load menu");
     } else {
       setMenu(data || []);
     }
+
     setLoading(false);
   }
 
   function addToCart(item) {
-    setCart([...cart, item]);
+    setCart((prev) => [...prev, item]);
   }
 
   function removeFromCart(index) {
@@ -67,6 +72,7 @@ export default function App() {
 
   /* CHECKOUT */
   async function checkout() {
+    if (!supabase) return alert("Supabase not connected");
     if (!table) return alert("Please enter table number");
     if (cart.length === 0) return alert("Cart is empty");
 
@@ -83,7 +89,7 @@ export default function App() {
 
     if (orderError) {
       console.error(orderError);
-      return alert("Failed to create order: " + orderError.message);
+      return alert("Order failed");
     }
 
     const items = cart.map((i) => ({
@@ -91,16 +97,18 @@ export default function App() {
       venue_id: venue,
       item_name: i.name,
       price: i.price,
-      station: i.station || null,
+      station: i.station || "kitchen",
     }));
 
-    const { error: itemsError } = await supabase.from("order_items").insert(items);
+    const { error: itemsError } = await supabase
+      .from("order_items")
+      .insert(items);
 
     if (itemsError) {
       console.error(itemsError);
-      alert("Order created but items failed to save.");
+      alert("Order created but items failed");
     } else {
-      alert("✅ Order sent successfully!");
+      alert("✅ Order sent successfully");
       setCart([]);
       setTable("");
     }
@@ -130,25 +138,22 @@ export default function App() {
 
       {!loading && !error && (
         <div style={styles.grid}>
-          {menu.length === 0 ? (
-            <p>No menu items available for this venue.</p>
-          ) : (
-            menu.map((item) => (
-              <div key={item.id} style={styles.card}>
-                <h4>{item.name}</h4>
-                <p>£{item.price}</p>
-                <small>{item.station}</small>
-                <button onClick={() => addToCart(item)}>Add to Cart</button>
-              </div>
-            ))
-          )}
+          {menu.map((item) => (
+            <div key={item.id} style={styles.card}>
+              <h4>{item.name}</h4>
+              <p>£{item.price}</p>
+              <small>{item.station}</small>
+              <button onClick={() => addToCart(item)}>Add</button>
+            </div>
+          ))}
         </div>
       )}
 
       {/* CART */}
       <h3>Cart ({cart.length})</h3>
+
       {cart.length === 0 ? (
-        <p>Your cart is empty.</p>
+        <p>Cart empty</p>
       ) : (
         cart.map((item, i) => (
           <div key={i} style={styles.cartItem}>
@@ -162,7 +167,10 @@ export default function App() {
 
       {cart.length > 0 && (
         <>
-          <h4>Total: £{cart.reduce((s, i) => s + (i.price || 0), 0)}</h4>
+          <h4>
+            Total: £{cart.reduce((s, i) => s + (i.price || 0), 0)}
+          </h4>
+
           <button style={styles.checkout} onClick={checkout}>
             Confirm Order
           </button>
@@ -178,55 +186,50 @@ export default function App() {
 const styles = {
   page: {
     fontFamily: "Arial, sans-serif",
-    padding: "20px",
+    padding: 20,
     background: "#f4f4f4",
     minHeight: "100vh",
   },
   header: {
     background: "#111",
     color: "white",
-    padding: "15px",
-    borderRadius: "10px",
-    marginBottom: "20px",
+    padding: 15,
+    borderRadius: 10,
+    marginBottom: 20,
   },
   input: {
     width: "100%",
-    padding: "12px",
-    marginBottom: "20px",
-    fontSize: "16px",
-    borderRadius: "8px",
+    padding: 12,
+    marginBottom: 20,
+    borderRadius: 8,
     border: "1px solid #ccc",
   },
   grid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
-    gap: "12px",
+    gap: 12,
   },
   card: {
     background: "white",
-    padding: "12px",
-    borderRadius: "10px",
-    boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+    padding: 12,
+    borderRadius: 10,
     textAlign: "center",
   },
   cartItem: {
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "center",
+    padding: 10,
     background: "white",
-    padding: "10px",
-    marginBottom: "8px",
-    borderRadius: "8px",
+    marginBottom: 8,
+    borderRadius: 8,
   },
   checkout: {
     width: "100%",
-    padding: "14px",
-    background: "#006400",
+    padding: 14,
+    background: "green",
     color: "white",
     border: "none",
-    borderRadius: "8px",
-    fontSize: "16px",
-    marginTop: "10px",
-    cursor: "pointer",
+    borderRadius: 8,
+    marginTop: 10,
   },
 };
