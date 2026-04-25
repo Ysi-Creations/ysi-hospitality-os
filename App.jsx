@@ -1,3 +1,6 @@
+import { createClient } from "@supabase/supabase-js";
+https://yotgjvtivoyfpdwhrud.supabase.co 
+sb_publishable_jBiQXRHMmmfLZtOipmWp9A_iDJEiYMl
 import React, { useState } from "react";
 
 export default function App() {
