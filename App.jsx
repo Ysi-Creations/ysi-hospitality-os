@@ -40,7 +40,7 @@ export default function App() {
     const { data: order } = await supabase
       .from("orders")
       .insert({
-        venue_id: "DEMO_VENUE",
+      venue_id: new URLSearchParams(window.location.search).get("venue") || "DEMO_VENUE",
         table_number: table,
         status: "pending",
         payment_status: "unpaid"
