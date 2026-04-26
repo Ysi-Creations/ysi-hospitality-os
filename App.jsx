@@ -8,9 +8,8 @@ const supabase = createClient(
 
 export default function App() {
   return (
-    <div style={{ padding: 20 }}>
-      <h1>YSI Hospitality</h1>
-      <p>Build fixed</p>
-    </div>
-  );
-}
+  <div style={{ padding: 20 }}>
+    <h1>YSI Hospitality</h1>
+    <p>Build fixed</p>
+  </div>
+);
