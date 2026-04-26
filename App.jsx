@@ -25,32 +25,36 @@ export default function App() {
       {
         venue_id: "ysi-venue-1",
         table_number: Number(table),
-        items: [item],
+        items: [{ name: item.name, price: item.price }],
         type: item.type,
         status: "pending",
         total_price: item.price
       }
     ]);
 
-    i
-}if (error) {
-  console.log("ERROR:", error);
-  alert(error.message);
-}
-else {
-      alert("Order placed!");
+    if (error) {
+      console.log("SUPABASE ERROR:", error);
+      alert(error.message);
+    } else {
+      alert("Order placed successfully!");
+      console.log("SUCCESS:", data);
     }
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>YSI Hospitality</h1>
+    <div style={{ padding: 20, fontFamily: "Arial" }}>
+      <h1>YSI Hospitality OS</h1>
 
       <input
         placeholder="Enter table number"
         value={table}
         onChange={(e) => setTable(e.target.value)}
-        style={{ marginBottom: 20 }}
+        style={{
+          padding: 10,
+          marginBottom: 20,
+          display: "block",
+          width: 200
+        }}
       />
 
       <h3>Menu</h3>
@@ -59,7 +63,7 @@ else {
         <div key={item.id} style={{ marginBottom: 10 }}>
           {item.name} - £{item.price}
           <button
-            style={{ marginLeft: 10 }}
+            style={{ marginLeft: 10, padding: 5 }}
             onClick={() => placeOrder(item)}
           >
             Order
