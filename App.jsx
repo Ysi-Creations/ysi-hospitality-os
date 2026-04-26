@@ -32,10 +32,12 @@ export default function App() {
       }
     ]);
 
-    if (error) {
-      console.log(error);
-      alert("Order failed");
-    } else {
+    i
+}if (error) {
+  console.log("ERROR:", error);
+  alert(error.message);
+}
+else {
       alert("Order placed!");
     }
   };
