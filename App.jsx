@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -7,22 +7,63 @@ const supabase = createClient(
 );
 
 export default function App() {
- const menu = [
-  { id: 1, name: "Burger", price: 8 },
-  { id: 2, name: "Fries", price: 4 },
-  { id: 3, name: "Coke", price: 3 }
-];
+  const [table, setTable] = useState("");
 
-return (
-  <div style={{ padding: 20 }}>
-    <h1>YSI Hospitality</h1>
+  const menu = [
+    { id: 1, name: "Burger", price: 8, type: "food" },
+    { id: 2, name: "Fries", price: 4, type: "food" },
+    { id: 3, name: "Coke", price: 3, type: "drink" }
+  ];
 
-    <h3>Menu</h3>
+  const placeOrder = async (item) => {
+    if (!table) {
+      alert("Please enter table number");
+      return;
+    }
 
-    {menu.map((item) => (
-      <div key={item.id} style={{ marginBottom: 10 }}>
-        {item.name} - £{item.price}
-      </div>
-    ))}
-  </div>
-);
+    const { data, error } = await supabase.from("orders").insert([
+      {
+        venue_id: "ysi-venue-1",
+        table_number: Number(table),
+        items: [item],
+        type: item.type,
+        status: "pending",
+        total_price: item.price
+      }
+    ]);
+
+    if (error) {
+      console.log(error);
+      alert("Order failed");
+    } else {
+      alert("Order placed!");
+    }
+  };
+
+  return (
+    <div style={{ padding: 20 }}>
+      <h1>YSI Hospitality</h1>
+
+      <input
+        placeholder="Enter table number"
+        value={table}
+        onChange={(e) => setTable(e.target.value)}
+        style={{ marginBottom: 20 }}
+      />
+
+      <h3>Menu</h3>
+
+      {menu.map((item) => (
+        <div key={item.id} style={{ marginBottom: 10 }}>
+          {item.name} - £{item.price}
+          <button
+            style={{ marginLeft: 10 }}
+            onClick={() => placeOrder(item)}
+          >
+            Order
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
