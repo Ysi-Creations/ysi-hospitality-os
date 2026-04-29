@@ -8,69 +8,55 @@ const supabase = createClient(
 
 export default function Kitchen() {
   const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   const fetchOrders = async () => {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("orders")
       .select("*")
       .order("id", { ascending: false });
 
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-      return;
-    }
-
     setOrders(data || []);
-    setLoading(false);
   };
 
   useEffect(() => {
     fetchOrders();
   }, []);
 
-  if (error) {
-    return (
-      <div style={{ padding: 20, color: "red" }}>
-        <h1>❌ Database Error</h1>
-        <p>{error}</p>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div style={{ padding: 20 }}>
-        <h1>🍳 Kitchen</h1>
-        <p>Loading orders...</p>
-      </div>
-    );
-  }
-
   return (
-    <div style={{ padding: 20 }}>
-      <h1>🍳 Kitchen Orders</h1>
+    <div style={{ background: "#111", minHeight: "100vh", color: "#fff", padding: 20 }}>
+      <h1 style={{ fontSize: 28, marginBottom: 20 }}>🍳 Kitchen Display</h1>
 
       {orders.length === 0 ? (
-        <p>No orders yet</p>
+        <div style={{ opacity: 0.7 }}>
+          <h2>No orders yet</h2>
+          <p>Waiting for new orders...</p>
+        </div>
       ) : (
-        orders.map((order) => (
-          <div
-            key={order.id}
-            style={{
-              border: "1px solid #ccc",
-              padding: 10,
-              marginBottom: 10
-            }}
-          >
-            <p><strong>Table:</strong> {order.table_number}</p>
-            <p><strong>Status:</strong> {order.status}</p>
-            <p><strong>Total:</strong> £{order.total_price}</p>
-            <pre>{JSON.stringify(order.items, null, 2)}</pre>
-          </div>
-        ))
+        <div style={{ display: "grid", gap: 15 }}>
+          {orders.map((order) => (
+            <div
+              key={order.id}
+              style={{
+                background: "#222",
+                padding: 15,
+                borderRadius: 10,
+                border: "2px solid #333"
+              }}
+            >
+              <h3>Table {order.table_number}</h3>
+              <p>Status: {order.status}</p>
+              <p>Total: £{order.total_price}</p>
+
+              <div>
+                {order.items?.map((item, i) => (
+                  <div key={i}>
+                    • {item.name} (£{item.price})
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
