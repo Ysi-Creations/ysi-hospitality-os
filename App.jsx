@@ -1,5 +1,9 @@
-import Kitchen from "./src/Kitchen";
-
 export default function App() {
-  return <Kitchen />;
+  console.log("APP MOUNTED");
+
+  return (
+    <div>
+      <h1>APP IS WORKING</h1>
+    </div>
+  );
 }
