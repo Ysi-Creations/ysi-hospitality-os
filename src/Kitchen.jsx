@@ -2,63 +2,48 @@ import React, { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
-  "https://yotgjvtivoyfpdwhrud.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF5b3RnanZ0aXZveWZwZHdocnVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjUyNjEsImV4cCI6MjA5MjY0MTI2MX0._sbVpoN-gtxVjrCUkqC2N3S-cerzkvmLRnKY0zv9TGs"
-"
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
 );
 
 export default function Kitchen() {
   const [orders, setOrders] = useState([]);
 
   const fetchOrders = async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("orders")
       .select("*")
-      .eq("type", "food")
-      .order("created_at", { ascending: false });
+      .order("id", { ascending: false });
 
-    setOrders(data || []);
+    if (error) {
+      console.error("Kitchen fetch error:", error);
+    } else {
+      setOrders(data);
+    }
   };
 
   useEffect(() => {
     fetchOrders();
 
-    const interval = setInterval(fetchOrders, 3000);
+    const interval = setInterval(fetchOrders, 5000); // refresh every 5s
     return () => clearInterval(interval);
   }, []);
 
-  const updateStatus = async (id, status) => {
-    await supabase.from("orders").update({ status }).eq("id", id);
-    fetchOrders();
-  };
-
   return (
     <div style={{ padding: 20 }}>
-      <h1>🍳 Kitchen Screen</h1>
+      <h1>🍳 Kitchen Orders</h1>
 
-      {orders.map((o) => (
-        <div key={o.id} style={{ border: "1px solid #ccc", margin: 10, padding: 10 }}>
-          <h3>Table / Ticket: {o.table_number}</h3>
-
-          <p>
-            {o.items?.map((i, idx) => (
-              <span key={idx}>
-                {i.name} (£{i.price}){" "}
-              </span>
-            ))}
-          </p>
-
-          <p>Status: {o.status}</p>
-
-          <button onClick={() => updateStatus(o.id, "preparing")}>
-            Preparing
-          </button>
-
-          <button onClick={() => updateStatus(o.id, "ready")}>
-            Ready
-          </button>
-        </div>
-      ))}
+      {orders.length === 0 ? (
+        <p>No orders yet</p>
+      ) : (
+        orders.map((order) => (
+          <div key={order.id} style={{ border: "1px solid #ccc", margin: 10, padding: 10 }}>
+            <h3>Table: {order.table_number}</h3>
+            <p>Status: {order.status}</p>
+            <pre>{JSON.stringify(order.items, null, 2)}</pre>
+          </div>
+        ))
+      )}
     </div>
   );
 }
