@@ -22,72 +22,23 @@ export default function Bar() {
 
   useEffect(() => {
     getOrders();
-
-    const channel = supabase
-      .channel("bar-orders")
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "orders" },
-        (payload) => {
-          if (payload.new.type === "drink") {
-            setOrders((prev) => [payload.new, ...prev]);
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, []);
 
   return (
-    <div style={{ padding: 20, fontFamily: "Arial" }}>
-      <h1>🍹 Bar Orders</h1>
+    <div style={{ padding: 20 }}>
+      <h1>🍹 BAR SCREEN WORKING</h1>
 
       {orders.length === 0 ? (
         <p>No drink orders yet...</p>
       ) : (
         orders.map((order) => (
-          <div
-            key={order.id}
-            style={{
-              border: "2px solid #000",
-              padding: 15,
-              marginBottom: 15,
-              borderRadius: 8,
-            }}
-          >
+          <div key={order.id}>
             <h2>Table {order.table_number}</h2>
-
             <ul>
               {order.items?.map((item, i) => (
-                <li key={i}>
-                  🥤 {item.name} - £{item.price}
-                </li>
+                <li key={i}>{item.name}</li>
               ))}
             </ul>
-
-            <button
-              onClick={async () => {
-                await supabase
-                  .from("orders")
-                  .update({ status: "ready" })
-                  .eq("id", order.id);
-
-                getOrders();
-              }}
-              style={{
-                marginTop: 10,
-                padding: 10,
-                background: "blue",
-                color: "white",
-                border: "none",
-                cursor: "pointer",
-              }}
-            >
-              Mark as Ready
-            </button>
           </div>
         ))
       )}
