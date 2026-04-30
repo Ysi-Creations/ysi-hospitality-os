@@ -1,5 +1,3 @@
-import Bar from "./Bar";
-
 export default function App() {
-  return <Bar />;
+  return <h1>BAR TEST SCREEN</h1>;
 }
