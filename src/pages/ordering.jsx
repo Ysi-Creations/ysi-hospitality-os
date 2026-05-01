@@ -9,15 +9,11 @@ export default function Ordering() {
     { name: "Burger", price: 10, category: "food" },
     { name: "Fries", price: 5, category: "food" },
     { name: "Coke", price: 3, category: "drink" },
-    { name: "Juice", price: 4, category: "drink" },
+    { name: "Beer", price: 6, category: "drink" },
   ];
 
   const addToCart = (item) => {
-    setCart([...cart, item]);
-  };
-
-  const getTotal = () => {
-    return cart.reduce((sum, item) => sum + item.price, 0);
+    setCart([...cart, { ...item, quantity: 1 }]);
   };
 
   const placeOrder = async () => {
@@ -26,36 +22,45 @@ export default function Ordering() {
       return;
     }
 
-    // 1. Create order
+    const total = cart.reduce((sum, item) => sum + item.price, 0);
+
     const { data: order, error } = await supabase
       .from("orders")
-      .insert([{ table_number: table, total: getTotal() }])
+      .insert([{ table_number: table, total }])
       .select()
       .single();
 
     if (error) {
-      alert("Error creating order");
+      alert("Error placing order");
       return;
     }
 
-    // 2. Insert items
     const items = cart.map((item) => ({
       order_id: order.id,
       name: item.name,
-      price: item.price,
       category: item.category,
       quantity: 1,
+      price: item.price,
     }));
 
-    await supabase.from("order_items").insert(items);
+    const { error: itemsError } = await supabase
+      .from("order_items")
+      .insert(items);
 
-    alert("Order placed!");
+    if (itemsError) {
+      alert("Error saving items");
+      return;
+    }
+
+    alert("Order placed successfully!");
+
     setCart([]);
+    setTable("");
   };
 
   return (
     <div style={{ padding: 20 }}>
-      <h2>Order</h2>
+      <h2>Order System</h2>
 
       <input
         placeholder="Table Number"
@@ -65,18 +70,22 @@ export default function Ordering() {
 
       <h3>Menu</h3>
       {menu.map((item, i) => (
-        <div key={i}>
+        <div key={i} style={{ marginBottom: 10 }}>
           {item.name} - ${item.price}
-          <button onClick={() => addToCart(item)}>Add</button>
+          <button onClick={() => addToCart(item)} style={{ marginLeft: 10 }}>
+            Add
+          </button>
         </div>
       ))}
 
       <h3>Cart</h3>
       {cart.map((item, i) => (
-        <div key={i}>{item.name}</div>
+        <div key={i}>
+          {item.name} - ${item.price}
+        </div>
       ))}
 
-      <h3>Total: ${getTotal()}</h3>
+      <h3>Total: ${cart.reduce((sum, item) => sum + item.price, 0)}</h3>
 
       <button onClick={placeOrder}>Place Order</button>
     </div>
