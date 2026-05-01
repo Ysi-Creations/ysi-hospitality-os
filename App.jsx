@@ -1,17 +1,22 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Bar from "./Bar";
 
-const Ordering = () => <h1>Ordering screen coming</h1>;
-const Kitchen = () => <h1>Kitchen screen coming</h1>;
+import React, { useState } from "react";
+import Bar from "./Bar";
+import Kitchen from "./Kitchen";
 
 export default function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Ordering />} />
-        <Route path="/kitchen" element={<Kitchen />} />
-        <Route path="/bar" element={<Bar />} />
-      </Routes>
-    </BrowserRouter>
+  const [view, setView] = useState("order");
+
+  const Ordering = () => (
+    <div style={{ padding: 20 }}>
+      <h1>🍽️ ORDERING SCREEN</h1>
+
+      <button onClick={() => setView("kitchen")}>Go Kitchen</button>
+      <button onClick={() => setView("bar")}>Go Bar</button>
+    </div>
   );
+
+  if (view === "kitchen") return <Kitchen />;
+  if (view === "bar") return <Bar />;
+
+  return <Ordering />;
 }
