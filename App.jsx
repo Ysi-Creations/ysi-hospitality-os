@@ -1,22 +1,15 @@
-
-import React, { useState } from "react";
-import Bar from "./Bar";
+import React from "react";
+import Ordering from "./Ordering";
 import Kitchen from "./Kitchen";
+import Bar from "./Bar";
+import Admin from "./Admin";
 
 export default function App() {
-  const [view, setView] = useState("order");
+  const path = window.location.pathname;
 
-  const Ordering = () => (
-    <div style={{ padding: 20 }}>
-      <h1>🍽️ ORDERING SCREEN</h1>
-
-      <button onClick={() => setView("kitchen")}>Go Kitchen</button>
-      <button onClick={() => setView("bar")}>Go Bar</button>
-    </div>
-  );
-
-  if (view === "kitchen") return <Kitchen />;
-  if (view === "bar") return <Bar />;
+  if (path === "/kitchen") return <Kitchen />;
+  if (path === "/bar") return <Bar />;
+  if (path === "/admin") return <Admin />;
 
   return <Ordering />;
 }
