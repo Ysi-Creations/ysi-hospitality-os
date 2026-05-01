@@ -5,11 +5,19 @@ import Bar from "./Bar";
 import Admin from "./Admin";
 
 export default function App() {
-  const path = window.location.pathname;
+  const path = typeof window !== "undefined" ? window.location.pathname : "/";
 
-  if (path === "/kitchen") return <Kitchen />;
-  if (path === "/bar") return <Bar />;
-  if (path === "/admin") return <Admin />;
+  switch (path) {
+    case "/kitchen":
+      return <Kitchen />;
 
-  return <Ordering />;
+    case "/bar":
+      return <Bar />;
+
+    case "/admin":
+      return <Admin />;
+
+    default:
+      return <Ordering />;
+  }
 }
