@@ -1,10 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  "https://ayotgjvtivoyfpdwhrud.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF5b3RnanZ0aXZveWZwZHdocnVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjUyNjEsImV4cCI6MjA5MjY0MTI2MX0._sbVpoN-gtxVjrCUkqC2N3S-cerzkvmLRnKY0zv9TGs"
-);
+import { supabase } from "../lib/supabaseClient";
 
 export default function Admin() {
   const [orders, setOrders] = useState([]);
@@ -13,7 +8,7 @@ export default function Admin() {
     const { data, error } = await supabase
       .from("orders")
       .select("*")
-      .order("id", { ascending: false });
+      .order("created_at", { ascending: false });
 
     if (!error) setOrders(data || []);
   };
@@ -45,20 +40,11 @@ export default function Admin() {
     loadOrders();
   };
 
-  const groupByTable = () => {
-    const grouped = {};
-
-    orders.forEach((o) => {
-      if (!grouped[o.table_number]) {
-        grouped[o.table_number] = [];
-      }
-      grouped[o.table_number].push(o);
-    });
-
-    return grouped;
-  };
-
-  const grouped = groupByTable();
+  const grouped = orders.reduce((acc, order) => {
+    if (!acc[order.table_number]) acc[order.table_number] = [];
+    acc[order.table_number].push(order);
+    return acc;
+  }, {});
 
   return (
     <div style={{ padding: 20 }}>
@@ -80,7 +66,7 @@ export default function Admin() {
             style={{
               border: "2px solid black",
               padding: 15,
-              marginBottom: 15
+              marginBottom: 15,
             }}
           >
             <h2>Table {table}</h2>
@@ -88,9 +74,10 @@ export default function Admin() {
             {items.map((o) => (
               <div key={o.id}>
                 <p>
-                  {o.type === "food" ? "🍔" : "🥤"}{" "}
+                  🍽{" "}
                   {o.items?.map((i) => i.name).join(", ")}
                 </p>
+                <p>£{o.total_price}</p>
               </div>
             ))}
 
