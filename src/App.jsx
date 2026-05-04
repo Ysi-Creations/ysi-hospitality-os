@@ -1,7 +1,7 @@
-import Ordering from "./Ordering";
-import Kitchen from "./Kitchen";
-import Bar from "./Bar";
-import Admin from "./Admin";
+import Ordering from "./pages/ordering.jsx";
+import Kitchen from "./pages/kitchen.jsx";
+import Bar from "./pages/bar.jsx";
+import Admin from "./pages/admin.jsx";
 
 export default function App() {
   const path = window.location.pathname;
