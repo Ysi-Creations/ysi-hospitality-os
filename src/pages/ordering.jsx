@@ -22,37 +22,24 @@ export default function Ordering() {
       return;
     }
 
-    const total = cart.reduce((sum, item) => sum + item.price, 0);
+    const total_price = cart.reduce((sum, item) => sum + item.price, 0);
 
-    const { data: order, error } = await supabase
-      .from("orders")
-      .insert([{ table_number: table, total }])
-      .select()
-      .single();
+    const { error } = await supabase.from("orders").insert([
+      {
+        table_number: table,
+        items: cart,
+        total_price: total_price,
+        status: "new",
+      },
+    ]);
 
     if (error) {
+      console.error(error);
       alert("Error placing order");
       return;
     }
 
-    const items = cart.map((item) => ({
-      order_id: order.id,
-      name: item.name,
-      category: item.category,
-      quantity: 1,
-      price: item.price,
-    }));
-
-    const { error: itemsError } = await supabase
-      .from("order_items")
-      .insert(items);
-
-    if (itemsError) {
-      alert("Error saving items");
-      return;
-    }
-
-    alert("Order placed successfully!");
+    alert("Order placed!");
 
     setCart([]);
     setTable("");
@@ -85,7 +72,10 @@ export default function Ordering() {
         </div>
       ))}
 
-      <h3>Total: ${cart.reduce((sum, item) => sum + item.price, 0)}</h3>
+      <h3>
+        Total: $
+        {cart.reduce((sum, item) => sum + item.price, 0)}
+      </h3>
 
       <button onClick={placeOrder}>Place Order</button>
     </div>
