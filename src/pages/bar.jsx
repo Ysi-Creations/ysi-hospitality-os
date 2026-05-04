@@ -1,10 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  "https://ayotgjvtivoyfpdwhrud.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF5b3RnanZ0aXZveWZwZHdocnVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwNjUyNjEsImV4cCI6MjA5MjY0MTI2MX0._sbVpoN-gtxVjrCUkqC2N3S-cerzkvmLRnKY0zv9TGs"
-);
+import { supabase } from "../lib/supabaseClient";
 
 export default function Bar() {
   const [orders, setOrders] = useState([]);
@@ -13,26 +8,36 @@ export default function Bar() {
     const { data, error } = await supabase
       .from("orders")
       .select("*")
-      .eq("type", "drink")
-      .order("id", { ascending: false });
+      .order("created_at", { ascending: false });
 
-    if (!error) setOrders(data || []);
-    else console.log(error);
+    if (error) {
+      console.log(error);
+      return;
+    }
+
+    // ✅ ONLY SHOW DRINK ITEMS
+    const drinkOrders = (data || [])
+      .map((order) => ({
+        ...order,
+        items: (order.items || []).filter(
+          (i) => i.category === "drink"
+        ),
+      }))
+      .filter((order) => order.items.length > 0);
+
+    setOrders(drinkOrders);
   };
 
   useEffect(() => {
     loadOrders();
 
-    // 🔥 LIVE UPDATES (REAL BAR FLOW)
     const channel = supabase
       .channel("bar-orders")
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "orders" },
-        (payload) => {
-          if (payload.new.type === "drink") {
-            setOrders((prev) => [payload.new, ...prev]);
-          }
+        () => {
+          loadOrders();
         }
       )
       .subscribe();
@@ -63,12 +68,12 @@ export default function Bar() {
           style={{
             border: "2px solid black",
             padding: 10,
-            marginBottom: 10
+            marginBottom: 10,
           }}
         >
           <h3>Table {o.table_number}</h3>
 
-          {o.items?.map((i, idx) => (
+          {o.items.map((i, idx) => (
             <p key={idx}>🥤 {i.name}</p>
           ))}
 
