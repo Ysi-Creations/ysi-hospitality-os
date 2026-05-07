@@ -4,11 +4,11 @@ import Bar from "./pages/bar.jsx";
 import Admin from "./pages/admin.jsx";
 
 export default function App() {
-  const path = window.location.pathname;
+  const hash = window.location.hash;
 
-  if (path === "/kitchen") return <Kitchen />;
-  if (path === "/bar") return <Bar />;
-  if (path === "/admin") return <Admin />;
+  if (hash === "#/kitchen") return <Kitchen />;
+  if (hash === "#/bar") return <Bar />;
+  if (hash === "#/admin") return <Admin />;
 
   return <Ordering />;
 }
