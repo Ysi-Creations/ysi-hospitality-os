@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
-export default function Admin() {
+export default function Admin({ venue }) {
   const [orders, setOrders] = useState([]);
 
   const loadOrders = async () => {
@@ -10,7 +10,12 @@ export default function Admin() {
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (!error) setOrders(data || []);
+    if (!error) {
+      const venueOrders = (data || []).filter(
+        (order) => order.venue_id === venue?.id
+      );
+      setOrders(venueOrders);
+    }
   };
 
   useEffect(() => {
@@ -25,10 +30,8 @@ export default function Admin() {
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+    return () => supabase.removeChannel(channel);
+  }, [venue]);
 
   const markPaid = async (tableNumber) => {
     await supabase
@@ -40,6 +43,7 @@ export default function Admin() {
     loadOrders();
   };
 
+  // Group orders by table
   const grouped = orders.reduce((acc, order) => {
     if (!acc[order.table_number]) acc[order.table_number] = [];
     acc[order.table_number].push(order);
@@ -47,26 +51,36 @@ export default function Admin() {
   }, {});
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>📊 ADMIN DASHBOARD</h1>
+    <div style={{ padding: 20, fontFamily: "Arial" }}>
+      {/* Venue Logo */}
+      {venue?.logo && (
+        <div style={{ textAlign: "center", marginBottom: 20 }}>
+          <img
+            src={venue.logo}
+            alt={venue.name}
+            style={{ height: 80, objectFit: "contain" }}
+          />
+        </div>
+      )}
+
+      <h1 style={{ color: venue?.theme_color || "#000" }}>
+        📊 {venue?.name} Admin
+      </h1>
 
       {Object.keys(grouped).length === 0 && <p>No orders yet...</p>}
 
       {Object.entries(grouped).map(([table, items]) => {
-        const total = items.reduce(
-          (sum, o) => sum + (o.total_price || 0),
-          0
-        );
-
+        const total = items.reduce((sum, o) => sum + (o.total_price || 0), 0);
         const isPaid = items.every((o) => o.status === "paid");
 
         return (
           <div
             key={table}
             style={{
-              border: "2px solid black",
+              border: `2px solid ${venue?.theme_color || "#000"}`,
               padding: 15,
               marginBottom: 15,
+              borderRadius: 8,
             }}
           >
             <h2>Table {table}</h2>
@@ -74,19 +88,29 @@ export default function Admin() {
             {items.map((o) => (
               <div key={o.id}>
                 <p>
-                  🍽{" "}
-                  {o.items?.map((i) => i.name).join(", ")}
+                  {o.items?.map((i) =>
+                    i.category === "food" ? `🍔 ${i.name}` : `🥤 ${i.name}`
+                  ).join(", ")}
                 </p>
                 <p>£{o.total_price}</p>
               </div>
             ))}
 
             <h3>Total: £{total}</h3>
-
             <p>Status: {isPaid ? "PAID ✅" : "UNPAID ❌"}</p>
 
             {!isPaid && (
-              <button onClick={() => markPaid(table)}>
+              <button
+                onClick={() => markPaid(table)}
+                style={{
+                  backgroundColor: venue?.theme_color || "#000",
+                  color: "#fff",
+                  padding: "8px 12px",
+                  border: "none",
+                  borderRadius: 5,
+                  cursor: "pointer",
+                }}
+              >
                 Mark Table as Paid
               </button>
             )}
