@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
-export default function Bar() {
+export default function Bar({ venue }) {
   const [orders, setOrders] = useState([]);
 
   const loadOrders = async () => {
@@ -15,13 +15,12 @@ export default function Bar() {
       return;
     }
 
-    // ✅ ONLY SHOW DRINK ITEMS
+    // Filter drink items for this venue only
     const drinkOrders = (data || [])
+      .filter((order) => order.venue_id === venue?.id)
       .map((order) => ({
         ...order,
-        items: (order.items || []).filter(
-          (i) => i.category === "drink"
-        ),
+        items: (order.items || []).filter((i) => i.category === "drink"),
       }))
       .filter((order) => order.items.length > 0);
 
@@ -36,29 +35,32 @@ export default function Bar() {
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "orders" },
-        () => {
-          loadOrders();
-        }
+        () => loadOrders()
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+    return () => supabase.removeChannel(channel);
+  }, [venue]);
 
   const markReady = async (id) => {
-    await supabase
-      .from("orders")
-      .update({ status: "ready" })
-      .eq("id", id);
-
+    await supabase.from("orders").update({ status: "ready" }).eq("id", id);
     loadOrders();
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h1>🍹 Bar Orders</h1>
+    <div style={{ padding: 20, fontFamily: "Arial" }}>
+      {/* Venue Logo */}
+      {venue?.logo && (
+        <div style={{ textAlign: "center", marginBottom: 20 }}>
+          <img
+            src={venue.logo}
+            alt={venue.name}
+            style={{ height: 80, objectFit: "contain" }}
+          />
+        </div>
+      )}
+
+      <h1 style={{ color: venue?.theme_color || "#000" }}>🍹 Bar Orders</h1>
 
       {orders.length === 0 && <p>No drink orders yet...</p>}
 
@@ -66,9 +68,10 @@ export default function Bar() {
         <div
           key={o.id}
           style={{
-            border: "2px solid black",
+            border: `2px solid ${venue?.theme_color || "#000"}`,
             padding: 10,
             marginBottom: 10,
+            borderRadius: 8,
           }}
         >
           <h3>Table {o.table_number}</h3>
@@ -79,7 +82,17 @@ export default function Bar() {
 
           <p>Status: {o.status}</p>
 
-          <button onClick={() => markReady(o.id)}>
+          <button
+            onClick={() => markReady(o.id)}
+            style={{
+              backgroundColor: venue?.theme_color || "#000",
+              color: "#fff",
+              padding: "8px 12px",
+              border: "none",
+              borderRadius: 5,
+              cursor: "pointer",
+            }}
+          >
             Mark as Ready
           </button>
         </div>
