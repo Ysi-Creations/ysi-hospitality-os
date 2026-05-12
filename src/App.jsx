@@ -8,29 +8,58 @@ import { supabase } from "./lib/supabaseClient";
 export default function App() {
   const hash = window.location.hash;
 
-  // Load venues
-  const [venues, setVenues] = useState([]);
   const [selectedVenue, setSelectedVenue] = useState(null);
 
   useEffect(() => {
-    const loadVenues = async () => {
-      const { data, error } = await supabase.from("venues").select("*");
-      if (!error) setVenues(data);
+    const loadVenue = async () => {
+      // READ venueId FROM URL
+      const params = new URLSearchParams(window.location.search);
+      const venueId = params.get("venueId");
+
+      if (!venueId) {
+        console.log("No venueId found in URL");
+        return;
+      }
+
+      // LOAD VENUE
+      const { data, error } = await supabase
+        .from("venues")
+        .select("*")
+        .eq("id", venueId)
+        .single();
+
+      if (error) {
+        console.log(error);
+        return;
+      }
+
+      setSelectedVenue(data);
     };
-    loadVenues();
+
+    loadVenue();
   }, []);
 
-  // Default: select first venue automatically
-  useEffect(() => {
-    if (venues.length > 0 && !selectedVenue) {
-      setSelectedVenue(venues[0]);
-    }
-  }, [venues]);
+  // LOADING SCREEN
+  if (!selectedVenue) {
+    return (
+      <div style={{ padding: 40, fontFamily: "Arial" }}>
+        Loading venue...
+      </div>
+    );
+  }
 
-  // Render pages and pass selectedVenue to Ordering/Kitchen/Bar/Admin
-  if (hash === "#/kitchen") return <Kitchen venue={selectedVenue} />;
-  if (hash === "#/bar") return <Bar venue={selectedVenue} />;
-  if (hash === "#/admin") return <Admin venue={selectedVenue} />;
+  // ROUTES
+  if (hash === "#/kitchen") {
+    return <Kitchen venue={selectedVenue} />;
+  }
+
+  if (hash === "#/bar") {
+    return <Bar venue={selectedVenue} />;
+  }
+
+  if (hash === "#/admin") {
+    return <Admin venue={selectedVenue} />;
+  }
 
   return <Ordering venue={selectedVenue} />;
 }
