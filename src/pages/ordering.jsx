@@ -1,46 +1,67 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
 export default function Ordering({ venue }) {
   const [table, setTable] = useState("");
   const [cart, setCart] = useState([]);
+  const [menu, setMenu] = useState([]);
 
-  const menu = [
-    { name: "Burger", price: 10, category: "food" },
-    { name: "Fries", price: 5, category: "food" },
-    { name: "Coke", price: 3, category: "drink" },
-    { name: "Beer", price: 6, category: "drink" },
-  ];
+  // LOAD MENU FROM SUPABASE
+  useEffect(() => {
+    const loadMenu = async () => {
+      if (!venue?.id) return;
 
+      const { data, error } = await supabase
+        .from("menu_items")
+        .select("*")
+        .eq("venue_id", venue.id)
+        .order("name");
+
+      if (error) {
+        console.log(error);
+        return;
+      }
+
+      setMenu(data || []);
+    };
+
+    loadMenu();
+  }, [venue]);
+
+  // ADD TO CART
   const addToCart = (item) => {
-    setCart([...cart, { ...item, quantity: 1 }]);
+    setCart([...cart, item]);
   };
 
+  // PLACE ORDER
   const placeOrder = async () => {
     if (!table || cart.length === 0) {
       alert("Enter table number and select items");
       return;
     }
 
-    const total_price = cart.reduce((sum, item) => sum + item.price, 0);
+    const total_price = cart.reduce(
+      (sum, item) => sum + Number(item.price),
+      0
+    );
 
     const { error } = await supabase.from("orders").insert([
       {
         table_number: table,
         items: cart,
-        total_price: total_price,
+        total_price,
         status: "new",
         venue_id: venue?.id || null,
       },
     ]);
 
     if (error) {
-      console.error(error);
+      console.log(error);
       alert("Error placing order");
       return;
     }
 
-    alert("Order placed!");
+    alert("Order placed successfully!");
 
     setCart([]);
     setTable("");
@@ -55,14 +76,14 @@ export default function Ordering({ venue }) {
         fontFamily: "Arial",
       }}
     >
-      {/* Venue Branding */}
+      {/* LOGO */}
       <div style={{ textAlign: "center", marginBottom: 20 }}>
         {venue?.logo && (
           <img
             src={venue.logo}
             alt={venue.name}
             style={{
-              height: 80,
+              height: 90,
               objectFit: "contain",
               marginBottom: 10,
             }}
@@ -72,7 +93,6 @@ export default function Ordering({ venue }) {
         <h1
           style={{
             color: venue?.theme_color || "#000",
-            marginBottom: 5,
           }}
         >
           {venue?.name || "Hospitality OS"}
@@ -81,26 +101,32 @@ export default function Ordering({ venue }) {
         <p>Welcome! Please place your order below.</p>
       </div>
 
-      {/* Table Input */}
+      {/* TABLE NUMBER */}
       <input
         placeholder="Table Number"
         value={table}
         onChange={(e) => setTable(e.target.value)}
         style={{
-          padding: 10,
           width: "100%",
+          padding: 12,
           marginBottom: 20,
           borderRadius: 8,
           border: "1px solid #ccc",
         }}
       />
 
-      {/* Menu */}
-      <h2 style={{ color: venue?.theme_color || "#000" }}>Menu</h2>
+      {/* MENU */}
+      <h2 style={{ color: venue?.theme_color || "#000" }}>
+        Menu
+      </h2>
 
-      {menu.map((item, i) => (
+      {menu.length === 0 && (
+        <p>No menu items found for this venue.</p>
+      )}
+
+      {menu.map((item) => (
         <div
-          key={i}
+          key={item.id}
           style={{
             background: "#fff",
             padding: 15,
@@ -114,7 +140,7 @@ export default function Ordering({ venue }) {
         >
           <div>
             <strong>{item.name}</strong>
-            <div>${item.price}</div>
+            <div>£{item.price}</div>
           </div>
 
           <button
@@ -133,10 +159,17 @@ export default function Ordering({ venue }) {
         </div>
       ))}
 
-      {/* Cart */}
-      <h2 style={{ marginTop: 30, color: venue?.theme_color || "#000" }}>
+      {/* CART */}
+      <h2
+        style={{
+          marginTop: 30,
+          color: venue?.theme_color || "#000",
+        }}
+      >
         Cart
       </h2>
+
+      {cart.length === 0 && <p>Your cart is empty.</p>}
 
       {cart.map((item, i) => (
         <div
@@ -148,22 +181,25 @@ export default function Ordering({ venue }) {
             borderRadius: 8,
           }}
         >
-          {item.name} - ${item.price}
+          {item.name} - £{item.price}
         </div>
       ))}
 
-      {/* Total */}
+      {/* TOTAL */}
       <h3 style={{ marginTop: 20 }}>
-        Total: $
-        {cart.reduce((sum, item) => sum + item.price, 0)}
+        Total: £
+        {cart.reduce(
+          (sum, item) => sum + Number(item.price),
+          0
+        )}
       </h3>
 
-      {/* Place Order */}
+      {/* PLACE ORDER */}
       <button
         onClick={placeOrder}
         style={{
-          marginTop: 20,
           width: "100%",
+          marginTop: 20,
           backgroundColor: venue?.theme_color || "#000",
           color: "#fff",
           border: "none",
@@ -175,6 +211,18 @@ export default function Ordering({ venue }) {
       >
         Place Order
       </button>
+
+      {/* COPYRIGHT */}
+      <footer
+        style={{
+          marginTop: 40,
+          textAlign: "center",
+          color: "#777",
+        }}
+      >
+        © {venue?.name || "Hospitality OS"} <br />
+        Powered by Ysi Creations
+      </footer>
     </div>
   );
 }
