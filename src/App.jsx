@@ -9,46 +9,63 @@ export default function App() {
   const hash = window.location.hash;
 
   const [selectedVenue, setSelectedVenue] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadVenue = async () => {
-      // READ venueId FROM URL
-      const params = new URLSearchParams(window.location.search);
-      const venueId = params.get("venueId");
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const venueId = params.get("venueId");
 
-      if (!venueId) {
-        console.log("No venueId found in URL");
-        return;
+        console.log("Venue ID:", venueId);
+
+        if (!venueId) {
+          setLoading(false);
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from("venues")
+          .select("*");
+
+        if (error) {
+          console.log(error);
+          setLoading(false);
+          return;
+        }
+
+        const venue = data.find((v) => v.id === venueId);
+
+        console.log("Found Venue:", venue);
+
+        setSelectedVenue(venue || null);
+        setLoading(false);
+
+      } catch (err) {
+        console.log(err);
+        setLoading(false);
       }
-
-      // LOAD VENUE
-      const { data, error } = await supabase
-        .from("venues")
-        .select("*")
-        .eq("id", venueId)
-        .single();
-
-      if (error) {
-        console.log(error);
-        return;
-      }
-
-      setSelectedVenue(data);
     };
 
     loadVenue();
   }, []);
 
-  // LOADING SCREEN
-  if (!selectedVenue) {
+  if (loading) {
     return (
-      <div style={{ padding: 40, fontFamily: "Arial" }}>
+      <div style={{ padding: 40 }}>
         Loading venue...
       </div>
     );
   }
 
-  // ROUTES
+  if (!selectedVenue) {
+    return (
+      <div style={{ padding: 40 }}>
+        Venue not found.
+      </div>
+    );
+  }
+
   if (hash === "#/kitchen") {
     return <Kitchen venue={selectedVenue} />;
   }
