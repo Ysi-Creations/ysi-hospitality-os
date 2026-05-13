@@ -14,35 +14,38 @@ export default function App() {
   useEffect(() => {
     const loadVenue = async () => {
       try {
+        // GET venueId FROM URL
         const params = new URLSearchParams(window.location.search);
         const venueId = params.get("venueId");
 
         console.log("Venue ID:", venueId);
 
+        // NO venueId
         if (!venueId) {
           setLoading(false);
           return;
         }
 
+        // LOAD SINGLE VENUE
         const { data, error } = await supabase
           .from("venues")
-          .select("*");
+          .select("*")
+          .eq("id", venueId)
+          .single();
 
         if (error) {
-          console.log(error);
+          console.log("Venue Error:", error);
           setLoading(false);
           return;
         }
 
-        const venue = data.find((v) => v.id === venueId);
+        console.log("Venue Loaded:", data);
 
-        console.log("Found Venue:", venue);
-
-        setSelectedVenue(venue || null);
+        setSelectedVenue(data);
         setLoading(false);
 
       } catch (err) {
-        console.log(err);
+        console.log("App Error:", err);
         setLoading(false);
       }
     };
@@ -50,22 +53,35 @@ export default function App() {
     loadVenue();
   }, []);
 
+  // LOADING
   if (loading) {
     return (
-      <div style={{ padding: 40 }}>
+      <div
+        style={{
+          padding: 40,
+          fontFamily: "Arial",
+        }}
+      >
         Loading venue...
       </div>
     );
   }
 
+  // VENUE NOT FOUND
   if (!selectedVenue) {
     return (
-      <div style={{ padding: 40 }}>
+      <div
+        style={{
+          padding: 40,
+          fontFamily: "Arial",
+        }}
+      >
         Venue not found.
       </div>
     );
   }
 
+  // ROUTES
   if (hash === "#/kitchen") {
     return <Kitchen venue={selectedVenue} />;
   }
