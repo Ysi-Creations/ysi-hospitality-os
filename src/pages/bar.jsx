@@ -4,10 +4,14 @@ import { supabase } from "../lib/supabaseClient";
 export default function Bar({ venue }) {
   const [orders, setOrders] = useState([]);
 
+  // LOAD ORDERS
   const loadOrders = async () => {
+    if (!venue?.id) return;
+
     const { data, error } = await supabase
       .from("orders")
       .select("*")
+      .eq("venue_id", venue.id)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -15,18 +19,21 @@ export default function Bar({ venue }) {
       return;
     }
 
-    // Filter drink items for this venue only
+    // FILTER DRINK ITEMS ONLY
     const drinkOrders = (data || [])
-      .filter((order) => order.venue_id === venue?.id)
       .map((order) => ({
         ...order,
-        items: (order.items || []).filter((i) => i.category === "drink"),
+        items: (order.items || []).filter(
+          (i) =>
+            String(i.category).toLowerCase() === "drink"
+        ),
       }))
       .filter((order) => order.items.length > 0);
 
     setOrders(drinkOrders);
   };
 
+  // REALTIME
   useEffect(() => {
     loadOrders();
 
@@ -34,50 +41,96 @@ export default function Bar({ venue }) {
       .channel("bar-orders")
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "orders" },
-        () => loadOrders()
+        {
+          event: "*",
+          schema: "public",
+          table: "orders",
+        },
+        () => {
+          loadOrders();
+        }
       )
       .subscribe();
 
-    return () => supabase.removeChannel(channel);
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [venue]);
 
+  // MARK READY
   const markReady = async (id) => {
-    await supabase.from("orders").update({ status: "ready" }).eq("id", id);
+    const { error } = await supabase
+      .from("orders")
+      .update({ status: "ready" })
+      .eq("id", id);
+
+    if (error) {
+      console.log(error);
+      return;
+    }
+
     loadOrders();
   };
 
   return (
-    <div style={{ padding: 20, fontFamily: "Arial" }}>
-      {/* Venue Logo */}
+    <div
+      style={{
+        padding: 20,
+        minHeight: "100vh",
+        backgroundColor: "#f5f5f5",
+        fontFamily: "Arial",
+      }}
+    >
+      {/* LOGO */}
       {venue?.logo && (
         <div style={{ textAlign: "center", marginBottom: 20 }}>
           <img
             src={venue.logo}
             alt={venue.name}
-            style={{ height: 80, objectFit: "contain" }}
+            style={{
+              height: 90,
+              objectFit: "contain",
+            }}
           />
         </div>
       )}
 
-      <h1 style={{ color: venue?.theme_color || "#000" }}>🍹 Bar Orders</h1>
+      {/* TITLE */}
+      <h1
+        style={{
+          color: venue?.theme_color || "#000",
+          marginBottom: 20,
+        }}
+      >
+        🍹 Bar Orders
+      </h1>
 
-      {orders.length === 0 && <p>No drink orders yet...</p>}
+      {/* EMPTY */}
+      {orders.length === 0 && (
+        <p>No drink orders yet...</p>
+      )}
 
+      {/* ORDERS */}
       {orders.map((o) => (
         <div
           key={o.id}
           style={{
-            border: `2px solid ${venue?.theme_color || "#000"}`,
-            padding: 10,
-            marginBottom: 10,
-            borderRadius: 8,
+            background: "#fff",
+            border: `2px solid ${
+              venue?.theme_color || "#000"
+            }`,
+            borderRadius: 10,
+            padding: 15,
+            marginBottom: 15,
+            boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
           }}
         >
-          <h3>Table {o.table_number}</h3>
+          <h2>Table {o.table_number}</h2>
 
           {o.items.map((i, idx) => (
-            <p key={idx}>🥤 {i.name}</p>
+            <div key={idx} style={{ marginBottom: 8 }}>
+              🥤 {i.name}
+            </div>
           ))}
 
           <p>Status: {o.status}</p>
@@ -85,11 +138,12 @@ export default function Bar({ venue }) {
           <button
             onClick={() => markReady(o.id)}
             style={{
-              backgroundColor: venue?.theme_color || "#000",
+              backgroundColor:
+                venue?.theme_color || "#000",
               color: "#fff",
-              padding: "8px 12px",
               border: "none",
-              borderRadius: 5,
+              padding: "10px 14px",
+              borderRadius: 8,
               cursor: "pointer",
             }}
           >
@@ -97,6 +151,18 @@ export default function Bar({ venue }) {
           </button>
         </div>
       ))}
+
+      {/* COPYRIGHT */}
+      <footer
+        style={{
+          marginTop: 40,
+          textAlign: "center",
+          color: "#777",
+        }}
+      >
+        © {venue?.name || "Hospitality OS"} <br />
+        Powered by Ysi Creations
+      </footer>
     </div>
   );
 }
