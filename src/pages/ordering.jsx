@@ -140,7 +140,7 @@ export default function Ordering({ venue }) {
         >
           <div>
             <strong>{item.name}</strong>
-            <div>£{item.price}</div>
+            <div>L.E {item.price}</div>
           </div>
 
           <button
@@ -181,13 +181,13 @@ export default function Ordering({ venue }) {
             borderRadius: 8,
           }}
         >
-          {item.name} - £{item.price}
+          {item.name} - L.E {item.price}
         </div>
       ))}
 
       {/* TOTAL */}
       <h3 style={{ marginTop: 20 }}>
-        Total: £
+        Total: L.E{" "}
         {cart.reduce(
           (sum, item) => sum + Number(item.price),
           0
