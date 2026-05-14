@@ -4,20 +4,25 @@ import { supabase } from "../lib/supabaseClient";
 export default function Admin({ venue }) {
   const [orders, setOrders] = useState([]);
 
+  // LOAD ORDERS
   const loadOrders = async () => {
+    if (!venue?.id) return;
+
     const { data, error } = await supabase
       .from("orders")
       .select("*")
+      .eq("venue_id", venue.id)
       .order("created_at", { ascending: false });
 
-    if (!error) {
-      const venueOrders = (data || []).filter(
-        (order) => order.venue_id === venue?.id
-      );
-      setOrders(venueOrders);
+    if (error) {
+      console.log(error);
+      return;
     }
+
+    setOrders(data || []);
   };
 
+  // REALTIME
   useEffect(() => {
     loadOrders();
 
@@ -25,89 +30,161 @@ export default function Admin({ venue }) {
       .channel("admin-orders")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "orders" },
-        () => loadOrders()
+        {
+          event: "*",
+          schema: "public",
+          table: "orders",
+        },
+        () => {
+          loadOrders();
+        }
       )
       .subscribe();
 
-    return () => supabase.removeChannel(channel);
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [venue]);
 
+  // MARK PAID
   const markPaid = async (tableNumber) => {
-    await supabase
+    const { error } = await supabase
       .from("orders")
       .update({ status: "paid" })
       .eq("table_number", tableNumber)
+      .eq("venue_id", venue.id)
       .neq("status", "paid");
+
+    if (error) {
+      console.log(error);
+      return;
+    }
 
     loadOrders();
   };
 
-  // Group orders by table
+  // GROUP ORDERS BY TABLE
   const grouped = orders.reduce((acc, order) => {
-    if (!acc[order.table_number]) acc[order.table_number] = [];
+    if (!acc[order.table_number]) {
+      acc[order.table_number] = [];
+    }
+
     acc[order.table_number].push(order);
+
     return acc;
   }, {});
 
   return (
-    <div style={{ padding: 20, fontFamily: "Arial" }}>
-      {/* Venue Logo */}
+    <div
+      style={{
+        padding: 20,
+        minHeight: "100vh",
+        backgroundColor: "#f5f5f5",
+        fontFamily: "Arial",
+      }}
+    >
+      {/* LOGO */}
       {venue?.logo && (
         <div style={{ textAlign: "center", marginBottom: 20 }}>
           <img
             src={venue.logo}
             alt={venue.name}
-            style={{ height: 80, objectFit: "contain" }}
+            style={{
+              height: 90,
+              objectFit: "contain",
+            }}
           />
         </div>
       )}
 
-      <h1 style={{ color: venue?.theme_color || "#000" }}>
+      {/* TITLE */}
+      <h1
+        style={{
+          color: venue?.theme_color || "#000",
+          marginBottom: 20,
+        }}
+      >
         📊 {venue?.name} Admin
       </h1>
 
-      {Object.keys(grouped).length === 0 && <p>No orders yet...</p>}
+      {/* EMPTY */}
+      {Object.keys(grouped).length === 0 && (
+        <p>No orders yet...</p>
+      )}
 
+      {/* TABLE GROUPS */}
       {Object.entries(grouped).map(([table, items]) => {
-        const total = items.reduce((sum, o) => sum + (o.total_price || 0), 0);
-        const isPaid = items.every((o) => o.status === "paid");
+        const total = items.reduce(
+          (sum, o) => sum + Number(o.total_price || 0),
+          0
+        );
+
+        const isPaid = items.every(
+          (o) => o.status === "paid"
+        );
 
         return (
           <div
             key={table}
             style={{
-              border: `2px solid ${venue?.theme_color || "#000"}`,
+              background: "#fff",
+              border: `2px solid ${
+                venue?.theme_color || "#000"
+              }`,
+              borderRadius: 10,
               padding: 15,
               marginBottom: 15,
-              borderRadius: 8,
+              boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
             }}
           >
             <h2>Table {table}</h2>
 
             {items.map((o) => (
-              <div key={o.id}>
+              <div
+                key={o.id}
+                style={{
+                  marginBottom: 12,
+                  paddingBottom: 10,
+                  borderBottom: "1px solid #ddd",
+                }}
+              >
                 <p>
-                  {o.items?.map((i) =>
-                    i.category === "food" ? `🍔 ${i.name}` : `🥤 ${i.name}`
-                  ).join(", ")}
+                  {o.items
+                    ?.map((i) =>
+                      String(i.category).toLowerCase() === "food"
+                        ? `🍔 ${i.name}`
+                        : `🥤 ${i.name}`
+                    )
+                    .join(", ")}
                 </p>
-                <p>£{o.total_price}</p>
+
+                <p>
+                  L.E {o.total_price}
+                </p>
+
+                <p>
+                  Status: {o.status}
+                </p>
               </div>
             ))}
 
-            <h3>Total: £{total}</h3>
-            <p>Status: {isPaid ? "PAID ✅" : "UNPAID ❌"}</p>
+            <h3>Total: L.E {total}</h3>
+
+            <p>
+              Payment:{" "}
+              {isPaid ? "PAID ✅" : "UNPAID ❌"}
+            </p>
 
             {!isPaid && (
               <button
                 onClick={() => markPaid(table)}
                 style={{
-                  backgroundColor: venue?.theme_color || "#000",
+                  backgroundColor:
+                    venue?.theme_color || "#000",
                   color: "#fff",
-                  padding: "8px 12px",
                   border: "none",
-                  borderRadius: 5,
+                  padding: "10px 14px",
+                  borderRadius: 8,
                   cursor: "pointer",
                 }}
               >
@@ -117,6 +194,18 @@ export default function Admin({ venue }) {
           </div>
         );
       })}
+
+      {/* COPYRIGHT */}
+      <footer
+        style={{
+          marginTop: 40,
+          textAlign: "center",
+          color: "#777",
+        }}
+      >
+        © {venue?.name || "Hospitality OS"} <br />
+        Powered by Ysi Creations
+      </footer>
     </div>
   );
 }
