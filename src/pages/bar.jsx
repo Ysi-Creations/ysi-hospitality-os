@@ -4,7 +4,7 @@ import { supabase } from "../lib/supabaseClient";
 export default function Bar({ venue }) {
   const [orders, setOrders] = useState([]);
 
-  // LOAD ORDERS
+  // LOAD BAR ORDERS
   const loadOrders = async () => {
     if (!venue?.id) return;
 
@@ -12,6 +12,7 @@ export default function Bar({ venue }) {
       .from("orders")
       .select("*")
       .eq("venue_id", venue.id)
+      .neq("status", "paid")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -19,8 +20,8 @@ export default function Bar({ venue }) {
       return;
     }
 
-    // FILTER DRINK ITEMS ONLY
-    const drinkOrders = (data || [])
+    // ONLY DRINK ITEMS
+    const barOrders = (data || [])
       .map((order) => ({
         ...order,
         items: (order.items || []).filter(
@@ -30,10 +31,10 @@ export default function Bar({ venue }) {
       }))
       .filter((order) => order.items.length > 0);
 
-    setOrders(drinkOrders);
+    setOrders(barOrders);
   };
 
-  // REALTIME
+  // REALTIME LISTENER
   useEffect(() => {
     loadOrders();
 
@@ -107,7 +108,7 @@ export default function Bar({ venue }) {
 
       {/* EMPTY */}
       {orders.length === 0 && (
-        <p>No drink orders yet...</p>
+        <p>No bar orders.</p>
       )}
 
       {/* ORDERS */}
@@ -128,7 +129,12 @@ export default function Bar({ venue }) {
           <h2>Table {o.table_number}</h2>
 
           {o.items.map((i, idx) => (
-            <div key={idx} style={{ marginBottom: 8 }}>
+            <div
+              key={idx}
+              style={{
+                marginBottom: 8,
+              }}
+            >
               🥤 {i.name}
             </div>
           ))}
@@ -147,12 +153,12 @@ export default function Bar({ venue }) {
               cursor: "pointer",
             }}
           >
-            Mark as Ready
+            Mark Ready
           </button>
         </div>
       ))}
 
-      {/* COPYRIGHT */}
+      {/* FOOTER */}
       <footer
         style={{
           marginTop: 40,
