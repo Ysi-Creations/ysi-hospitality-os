@@ -4,7 +4,7 @@ import { supabase } from "../lib/supabaseClient";
 export default function Kitchen({ venue }) {
   const [orders, setOrders] = useState([]);
 
-  // LOAD ORDERS
+  // LOAD KITCHEN ORDERS
   const loadOrders = async () => {
     if (!venue?.id) return;
 
@@ -12,6 +12,7 @@ export default function Kitchen({ venue }) {
       .from("orders")
       .select("*")
       .eq("venue_id", venue.id)
+      .neq("status", "paid")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -19,8 +20,8 @@ export default function Kitchen({ venue }) {
       return;
     }
 
-    // FILTER FOOD ITEMS
-    const foodOrders = (data || [])
+    // ONLY FOOD ITEMS
+    const kitchenOrders = (data || [])
       .map((order) => ({
         ...order,
         items: (order.items || []).filter(
@@ -30,10 +31,10 @@ export default function Kitchen({ venue }) {
       }))
       .filter((order) => order.items.length > 0);
 
-    setOrders(foodOrders);
+    setOrders(kitchenOrders);
   };
 
-  // REALTIME
+  // REALTIME LISTENER
   useEffect(() => {
     loadOrders();
 
@@ -107,7 +108,7 @@ export default function Kitchen({ venue }) {
 
       {/* EMPTY */}
       {orders.length === 0 && (
-        <p>No food orders yet...</p>
+        <p>No kitchen orders.</p>
       )}
 
       {/* ORDERS */}
@@ -152,12 +153,12 @@ export default function Kitchen({ venue }) {
               cursor: "pointer",
             }}
           >
-            Mark as Ready
+            Mark Ready
           </button>
         </div>
       ))}
 
-      {/* COPYRIGHT */}
+      {/* FOOTER */}
       <footer
         style={{
           marginTop: 40,
