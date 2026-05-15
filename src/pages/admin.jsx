@@ -19,7 +19,12 @@ export default function Admin({ venue }) {
       return;
     }
 
-    setOrders(data || []);
+    // Only show unpaid orders in active dashboard
+    const unpaidOrders = (data || []).filter(
+      (o) => o.status !== "paid"
+    );
+
+    setOrders(unpaidOrders);
   };
 
   // REALTIME
@@ -30,20 +35,12 @@ export default function Admin({ venue }) {
       .channel("admin-orders")
       .on(
         "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "orders",
-        },
-        () => {
-          loadOrders();
-        }
+        { event: "*", schema: "public", table: "orders" },
+        () => loadOrders()
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => supabase.removeChannel(channel);
   }, [venue]);
 
   // MARK PAID
@@ -63,14 +60,10 @@ export default function Admin({ venue }) {
     loadOrders();
   };
 
-  // GROUP ORDERS BY TABLE
+  // GROUP BY TABLE
   const grouped = orders.reduce((acc, order) => {
-    if (!acc[order.table_number]) {
-      acc[order.table_number] = [];
-    }
-
+    if (!acc[order.table_number]) acc[order.table_number] = [];
     acc[order.table_number].push(order);
-
     return acc;
   }, {});
 
@@ -89,48 +82,28 @@ export default function Admin({ venue }) {
           <img
             src={venue.logo}
             alt={venue.name}
-            style={{
-              height: 90,
-              objectFit: "contain",
-            }}
+            style={{ height: 90, objectFit: "contain" }}
           />
         </div>
       )}
 
-      {/* TITLE */}
-      <h1
-        style={{
-          color: venue?.theme_color || "#000",
-          marginBottom: 20,
-        }}
-      >
+      <h1 style={{ color: venue?.theme_color || "#000", marginBottom: 20 }}>
         📊 {venue?.name} Admin
       </h1>
 
-      {/* EMPTY */}
-      {Object.keys(grouped).length === 0 && (
-        <p>No orders yet...</p>
-      )}
+      {Object.keys(grouped).length === 0 && <p>No active orders.</p>}
 
-      {/* TABLE GROUPS */}
       {Object.entries(grouped).map(([table, items]) => {
-        const total = items.reduce(
-          (sum, o) => sum + Number(o.total_price || 0),
-          0
-        );
+        const total = items.reduce((sum, o) => sum + Number(o.total_price || 0), 0);
 
-        const isPaid = items.every(
-          (o) => o.status === "paid"
-        );
+        const isPaid = items.every((o) => o.status === "paid");
 
         return (
           <div
             key={table}
             style={{
               background: "#fff",
-              border: `2px solid ${
-                venue?.theme_color || "#000"
-              }`,
+              border: `2px solid ${venue?.theme_color || "#000"}`,
               borderRadius: 10,
               padding: 15,
               marginBottom: 15,
@@ -140,47 +113,25 @@ export default function Admin({ venue }) {
             <h2>Table {table}</h2>
 
             {items.map((o) => (
-              <div
-                key={o.id}
-                style={{
-                  marginBottom: 12,
-                  paddingBottom: 10,
-                  borderBottom: "1px solid #ddd",
-                }}
-              >
+              <div key={o.id} style={{ marginBottom: 12, paddingBottom: 10, borderBottom: "1px solid #ddd" }}>
                 <p>
                   {o.items
                     ?.map((i) =>
-                      String(i.category).toLowerCase() === "food"
-                        ? `🍔 ${i.name}`
-                        : `🥤 ${i.name}`
+                      String(i.category).toLowerCase() === "food" ? `🍔 ${i.name}` : `🥤 ${i.name}`
                     )
                     .join(", ")}
                 </p>
-
-                <p>
-                  L.E {o.total_price}
-                </p>
-
-                <p>
-                  Status: {o.status}
-                </p>
+                <p>L.E {o.total_price}</p>
+                <p>Status: {o.status}</p>
               </div>
             ))}
 
             <h3>Total: L.E {total}</h3>
-
-            <p>
-              Payment:{" "}
-              {isPaid ? "PAID ✅" : "UNPAID ❌"}
-            </p>
-
             {!isPaid && (
               <button
                 onClick={() => markPaid(table)}
                 style={{
-                  backgroundColor:
-                    venue?.theme_color || "#000",
+                  backgroundColor: venue?.theme_color || "#000",
                   color: "#fff",
                   border: "none",
                   padding: "10px 14px",
@@ -195,16 +146,8 @@ export default function Admin({ venue }) {
         );
       })}
 
-      {/* COPYRIGHT */}
-      <footer
-        style={{
-          marginTop: 40,
-          textAlign: "center",
-          color: "#777",
-        }}
-      >
-        © {venue?.name || "Hospitality OS"} <br />
-        Powered by Ysi Creations
+      <footer style={{ marginTop: 40, textAlign: "center", color: "#777" }}>
+        © {venue?.name || "Hospitality OS"} <br /> Powered by Ysi Creations
       </footer>
     </div>
   );
