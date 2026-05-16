@@ -1,112 +1,59 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
-export default function Ordering({ venue }) {
-  const [table, setTable] = useState("");
-  const [cart, setCart] = useState([]);
-  const [menu, setMenu] = useState([]);
+export default function Kitchen({ venue }) {
+  const [orders, setOrders] = useState([]);
 
-  // Load menu from Supabase
-  useEffect(() => {
-    const loadMenu = async () => {
-      if (!venue?.id) return;
-      const { data, error } = await supabase
-        .from("menu_items")
-        .select("*")
-        .eq("venue_id", venue.id)
-        .order("name");
-      if (error) return console.log(error);
-      setMenu(data || []);
-    };
-    loadMenu();
-  }, [venue]);
+  const loadOrders = async () => {
+    if (!venue?.id) return;
 
-  // Add item to cart with correct station
-  const addToCart = (item) => {
-    const cartItem = {
-      ...item,
-      station: item.category.toLowerCase() === "food" ? "kitchen" : "bar"
-    };
-    setCart([...cart, cartItem]);
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("venue_id", venue.id)
+      .neq("status", "paid")
+      .order("created_at", { ascending: false });
+
+    if (error) return console.log(error);
+
+    const kitchenOrders = (data || [])
+      .map(order => ({
+        ...order,
+        items: (order.items || []).filter(i => String(i.station).toLowerCase() === "kitchen")
+      }))
+      .filter(order => order.items.length > 0);
+
+    setOrders(kitchenOrders);
   };
 
-  // Place order
-  const placeOrder = async () => {
-    if (!table || cart.length === 0) {
-      alert("Enter table number and select items");
-      return;
-    }
+  useEffect(() => {
+    loadOrders();
+    const channel = supabase
+      .channel("kitchen-orders")
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => loadOrders())
+      .subscribe();
+    return () => supabase.removeChannel(channel);
+  }, [venue]);
 
-    const total_price = cart.reduce((sum, item) => sum + Number(item.price), 0);
-
-    const { error } = await supabase.from("orders").insert([
-      {
-        table_number: table,
-        items: cart,
-        total_price,
-        status: "new",
-        venue_id: venue?.id || null,
-      },
-    ]);
-
-    if (error) {
-      console.log(error);
-      alert("Error placing order");
-      return;
-    }
-
-    alert("Order placed successfully!");
-    setCart([]);
-    setTable("");
+  const markReady = async (id) => {
+    await supabase.from("orders").update({ status: "ready" }).eq("id", id);
+    loadOrders();
   };
 
   return (
-    <div style={{ padding: 20, minHeight: "100vh", backgroundColor: "#f5f5f5", fontFamily: "Arial" }}>
-      <div style={{ textAlign: "center", marginBottom: 20 }}>
-        {venue?.logo && <img src={venue.logo} alt={venue.name} style={{ height: 90, objectFit: "contain", marginBottom: 10 }} />}
-        <h1 style={{ color: venue?.theme_color || "#000" }}>{venue?.name || "Hospitality OS"}</h1>
-        <p>Welcome! Please place your order below.</p>
-      </div>
-
-      <input
-        placeholder="Table Number"
-        value={table}
-        onChange={(e) => setTable(e.target.value)}
-        style={{ width: "100%", padding: 12, marginBottom: 20, borderRadius: 8, border: "1px solid #ccc" }}
-      />
-
-      <h2 style={{ color: venue?.theme_color || "#000" }}>Menu</h2>
-      {menu.length === 0 && <p>No menu items found for this venue.</p>}
-
-      {menu.map((item) => (
-        <div key={item.id} style={{ background: "#fff", padding: 15, marginBottom: 10, borderRadius: 10, display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "0 2px 5px rgba(0,0,0,0.1)" }}>
-          <div>
-            <strong>{item.name}</strong>
-            <div>L.E {item.price}</div>
-          </div>
-          <button onClick={() => addToCart(item)} style={{ backgroundColor: venue?.theme_color || "#000", color: "#fff", border: "none", padding: "10px 15px", borderRadius: 8, cursor: "pointer" }}>
-            Add
-          </button>
+    <div style={{ padding: 20, minHeight: "100vh", fontFamily: "Arial" }}>
+      {venue?.logo && <div style={{ textAlign: "center", marginBottom: 20 }}><img src={venue.logo} alt={venue.name} style={{ height: 90, objectFit: "contain" }} /></div>}
+      <h1 style={{ color: venue?.theme_color || "#000", marginBottom: 20 }}>🍳 Kitchen Orders</h1>
+      {orders.length === 0 && <p>No food orders.</p>}
+      {orders.map(o => (
+        <div key={o.id} style={{ background: "#fff", border: `2px solid ${venue?.theme_color || "#000"}`, borderRadius: 10, padding: 15, marginBottom: 15, boxShadow: "0 2px 5px rgba(0,0,0,0.1)" }}>
+          <h2>Table {o.table_number}</h2>
+          {o.items.map((i, idx) => <div key={idx} style={{ marginBottom: 8 }}>🍔 {i.name}</div>)}
+          <p>Status: {o.status}</p>
+          <button onClick={() => markReady(o.id)} style={{ backgroundColor: venue?.theme_color || "#000", color: "#fff", border: "none", padding: "10px 14px", borderRadius: 8, cursor: "pointer" }}>Mark Ready</button>
         </div>
       ))}
-
-      <h2 style={{ marginTop: 30, color: venue?.theme_color || "#000" }}>Cart</h2>
-      {cart.length === 0 && <p>Your cart is empty.</p>}
-      {cart.map((item, i) => (
-        <div key={i} style={{ background: "#fff", padding: 10, marginBottom: 10, borderRadius: 8 }}>
-          {item.name} - L.E {item.price}
-        </div>
-      ))}
-
-      <h3 style={{ marginTop: 20 }}>Total: L.E {cart.reduce((sum, item) => sum + Number(item.price), 0)}</h3>
-
-      <button onClick={placeOrder} style={{ width: "100%", marginTop: 20, backgroundColor: venue?.theme_color || "#000", color: "#fff", border: "none", padding: 15, borderRadius: 10, fontSize: 16, cursor: "pointer" }}>
-        Place Order
-      </button>
-
-      <footer style={{ marginTop: 40, textAlign: "center", color: "#777" }}>
-        © {venue?.name || "Hospitality OS"} <br /> Powered by Ysi Creations
-      </footer>
+      <footer style={{ marginTop: 40, textAlign: "center", color: "#777" }}>© {venue?.name || "Hospitality OS"} <br /> Powered by Ysi Creations</footer>
     </div>
   );
 }
