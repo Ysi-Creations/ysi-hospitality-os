@@ -4,34 +4,30 @@ import { supabase } from "../lib/supabaseClient";
 export default function Kitchen({ venue }) {
   const [orders, setOrders] = useState([]);
 
-  // LOAD KITCHEN ORDERS
+  // LOAD KITCHEN ORDERS (FOOD ONLY)
   const loadOrders = async () => {
-    try {
-      if (!venue?.id) return;
+    if (!venue?.id) return;
 
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*")
-        .eq("venue_id", venue.id)
-        .neq("status", "paid")
-        .order("created_at", { ascending: false });
+    const { data, error } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("venue_id", venue.id)
+      .neq("status", "paid")
+      .order("created_at", { ascending: false });
 
-      if (error) return console.log(error);
+    if (error) return console.log(error);
 
-      // Filter only kitchen items
-      const kitchenOrders = (data || [])
-        .map((order) => ({
-          ...order,
-          items: (order.items || []).filter(
-            (i) => String(i.station || "").toLowerCase() === "kitchen"
-          ),
-        }))
-        .filter((order) => order.items.length > 0);
+    // FILTER: ONLY items assigned to 'kitchen' (FOOD)
+    const kitchenOrders = (data || [])
+      .map((order) => ({
+        ...order,
+        items: (order.items || []).filter(
+          (i) => String(i.station || "").toLowerCase() === "kitchen"
+        ),
+      }))
+      .filter((order) => order.items.length > 0); // remove orders with no food
 
-      setOrders(kitchenOrders);
-    } catch (err) {
-      console.log(err);
-    }
+    setOrders(kitchenOrders);
   };
 
   // REALTIME UPDATES
@@ -69,7 +65,7 @@ export default function Kitchen({ venue }) {
         fontFamily: "Arial",
       }}
     >
-      {/* Banner */}
+      {/* BANNER */}
       <div style={{ textAlign: "center", marginBottom: 20 }}>
         <img
           src="/mamas-banner.png"
@@ -79,7 +75,7 @@ export default function Kitchen({ venue }) {
       </div>
 
       <h1 style={{ textAlign: "center", color: "#000", marginBottom: 20 }}>
-        Kitchen Orders
+        Kitchen Orders (Food Only)
       </h1>
 
       {orders.length === 0 ? (
