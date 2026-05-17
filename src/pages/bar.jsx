@@ -50,30 +50,65 @@ export default function Bar({ venue }) {
   };
 
   return (
-    <div style={{ padding: 20, minHeight: "100vh", fontFamily: "Arial" }}>
-      {venue?.logo && (
-        <div style={{ textAlign: "center", marginBottom: 20 }}>
-          <img src={venue.logo} alt={venue.name} style={{ height: 90, objectFit: "contain" }} />
-        </div>
+    <div
+      style={{
+        padding: 20,
+        minHeight: "100vh",
+        fontFamily: "Arial",
+        backgroundColor: "#e7b94f",
+      }}
+    >
+      {/* Banner */}
+      <div style={{ textAlign: "center", marginBottom: 20 }}>
+        <img
+          src="/mamas-banner.png"
+          alt="Mama's Jamaican Kitchen"
+          style={{ width: "100%", maxWidth: 700, borderRadius: 12 }}
+        />
+      </div>
+
+      <h1 style={{ color: "#000", marginBottom: 20, textAlign: "center" }}>🍹 Bar Orders</h1>
+
+      {orders.length === 0 ? (
+        <p style={{ textAlign: "center", fontSize: 18 }}>No drink orders at the moment.</p>
+      ) : (
+        orders.map((order) => (
+          <div
+            key={order.id}
+            style={{
+              background: "#fff",
+              borderRadius: 10,
+              padding: 15,
+              marginBottom: 15,
+              boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+            }}
+          >
+            <div style={{ marginBottom: 10, fontWeight: "bold" }}>Table: {order.table_number}</div>
+            {order.items.map((i, idx) => (
+              <div key={idx} style={{ paddingLeft: 10 }}>
+                🥤 {i.name} ({i.price} L.E)
+              </div>
+            ))}
+            <button
+              onClick={() => markReady(order.id)}
+              style={{
+                marginTop: 10,
+                backgroundColor: "#000",
+                color: "#fff",
+                border: "none",
+                padding: "8px 12px",
+                borderRadius: 8,
+                cursor: "pointer",
+              }}
+            >
+              Mark Ready
+            </button>
+          </div>
+        ))
       )}
 
-      <h1 style={{ color: venue?.theme_color || "#000", marginBottom: 20 }}>🍹 Bar Orders</h1>
-
-      {orders.length === 0 && <p>No drink orders.</p>}
-
-      {orders.map((order) => (
-        <div key={order.id} style={{ background: "#fff", border: `2px solid ${venue?.theme_color || "#000"}`, borderRadius: 10, padding: 15, marginBottom: 15, boxShadow: "0 2px 5px rgba(0,0,0,0.1)" }}>
-          <h2>Table {order.table_number}</h2>
-          {order.items.map((i, idx) => (
-            <div key={idx} style={{ marginBottom: 8 }}>🥤 {i.name}</div>
-          ))}
-          <p>Status: {order.status}</p>
-          <button onClick={() => markReady(order.id)} style={{ backgroundColor: venue?.theme_color || "#000", color: "#fff", border: "none", padding: "10px 14px", borderRadius: 8, cursor: "pointer" }}>Mark Ready</button>
-        </div>
-      ))}
-
       <footer style={{ marginTop: 40, textAlign: "center", color: "#777" }}>
-        © {venue?.name || "Hospitality OS"} <br /> Powered by Ysi Creations
+        © {venue?.name || "Mama's Jamaican Kitchen"} <br /> Powered by Ysi Creations
       </footer>
     </div>
   );
