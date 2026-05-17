@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import { supabase } from "../lib/supabaseClient";
 
 export default function Kitchen({ venue }) {
   const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // LOAD KITCHEN ORDERS (FOOD ONLY)
   const loadOrders = async () => {
     if (!venue?.id) return;
-
+    
     const { data, error } = await supabase
       .from("orders")
       .select("*")
@@ -15,9 +17,12 @@ export default function Kitchen({ venue }) {
       .neq("status", "paid")
       .order("created_at", { ascending: false });
 
-    if (error) return console.log(error);
+    if (error) {
+      console.error(error);
+      return;
+    }
 
-    // FILTER: ONLY items assigned to 'kitchen' (FOOD)
+    // FILTER: ONLY FOOD items for kitchen
     const kitchenOrders = (data || [])
       .map((order) => ({
         ...order,
@@ -25,9 +30,10 @@ export default function Kitchen({ venue }) {
           (i) => String(i.station || "").toLowerCase() === "kitchen"
         ),
       }))
-      .filter((order) => order.items.length > 0); // remove orders with no food
+      .filter((order) => order.items.length > 0);
 
     setOrders(kitchenOrders);
+    setLoading(false);
   };
 
   // REALTIME UPDATES
@@ -39,84 +45,95 @@ export default function Kitchen({ venue }) {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "orders" },
-        () => loadOrders()
+        loadOrders
       )
       .subscribe();
 
     return () => supabase.removeChannel(channel);
   }, [venue]);
 
-  // MARK ORDER READY
   const markReady = async (id) => {
-    try {
-      await supabase.from("orders").update({ status: "ready" }).eq("id", id);
-      loadOrders();
-    } catch (err) {
-      console.log(err);
-    }
+    const { error } = await supabase
+      .from("orders")
+      .update({ status: "ready" })
+      .eq("id", id);
+
+    if (error) console.error(error);
+    else loadOrders();
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#e7b94f",
-        padding: 20,
-        fontFamily: "Arial",
-      }}
-    >
-      {/* BANNER */}
-      <div style={{ textAlign: "center", marginBottom: 20 }}>
-        <img
+    <div className="min-h-screen" style={{ backgroundColor: "#FCD34D" }}>
+      {/* Banner */}
+      <div className="w-full">
+        <Image
           src="/mamas-banner.png"
           alt="Mama's Jamaican Kitchen"
-          style={{ width: "100%", maxWidth: 700, borderRadius: 12 }}
+          width={1200}
+          height={300}
+          className="w-full h-auto object-cover"
+          priority
         />
       </div>
 
-      <h1 style={{ textAlign: "center", color: "#000", marginBottom: 20 }}>
-        Kitchen Orders (Food Only)
-      </h1>
+      <div className="max-w-5xl mx-auto p-6">
+        <h1 className="text-4xl font-bold text-center text-green-800 mb-8">
+          KITCHEN ORDERS — FOOD ONLY
+        </h1>
 
-      {orders.length === 0 ? (
-        <p style={{ textAlign: "center", fontSize: 18 }}>No food orders at the moment.</p>
-      ) : (
-        orders.map((order) => (
-          <div
-            key={order.id}
-            style={{
-              background: "#fff",
-              borderRadius: 10,
-              padding: 15,
-              marginBottom: 15,
-              boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
-            }}
-          >
-            <div style={{ marginBottom: 10 }}>
-              <strong>Table: {order.table_number}</strong> | Total: L.E {order.total_price}
-            </div>
-            {order.items.map((item, idx) => (
-              <div key={idx} style={{ paddingLeft: 10 }}>
-                - {item.name} ({item.price} L.E)
+        {loading ? (
+          <p className="text-center text-2xl">Loading orders...</p>
+        ) : orders.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-3xl text-green-700">No food orders at the moment.</p>
+            <p className="text-green-600 mt-4">New orders will appear here instantly.</p>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {orders.map((order) => (
+              <div
+                key={order.id}
+                className="bg-white rounded-3xl shadow-xl p-8 border-4 border-green-700"
+              >
+                <div className="flex justify-between items-start mb-6">
+                  <div>
+                    <div className="text-4xl font-bold text-green-800">
+                      Table #{order.table_number}
+                    </div>
+                    <div className="text-xl text-green-600 mt-1">
+                      Total: ${Number(order.total_price).toFixed(2)}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => markReady(order.id)}
+                    className="bg-green-700 hover:bg-green-800 text-white px-10 py-4 rounded-2xl text-xl font-bold transition"
+                  >
+                    MARK READY
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {order.items.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="bg-green-50 border border-green-200 rounded-2xl p-6 text-2xl"
+                    >
+                      <span className="font-semibold">{item.name}</span>
+                      {item.description && (
+                        <span className="text-green-700 text-xl ml-3">- {item.description}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="text-center text-sm text-green-600 mt-6">
+                  Order placed: {new Date(order.created_at).toLocaleTimeString()}
+                </div>
               </div>
             ))}
-            <button
-              onClick={() => markReady(order.id)}
-              style={{
-                marginTop: 10,
-                backgroundColor: "#000",
-                color: "#fff",
-                border: "none",
-                padding: "8px 12px",
-                borderRadius: 8,
-                cursor: "pointer",
-              }}
-            >
-              Mark Ready
-            </button>
           </div>
-        ))
-      )}
+        )}
+      </div>
     </div>
   );
 }
