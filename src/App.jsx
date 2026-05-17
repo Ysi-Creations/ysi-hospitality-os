@@ -14,19 +14,16 @@ export default function App() {
   useEffect(() => {
     const loadVenue = async () => {
       try {
-        // GET venueId FROM URL
         const params = new URLSearchParams(window.location.search);
         const venueId = params.get("venueId");
 
         console.log("Venue ID:", venueId);
 
-        // NO venueId
         if (!venueId) {
           setLoading(false);
           return;
         }
 
-        // LOAD SINGLE VENUE
         const { data, error } = await supabase
           .from("venues")
           .select("*")
@@ -53,16 +50,52 @@ export default function App() {
     loadVenue();
   }, []);
 
+  // GLOBAL PAGE STYLE
+  const pageStyle = {
+    minHeight: "100vh",
+    backgroundColor: "#e7b94f",
+    fontFamily: "Arial, sans-serif",
+  };
+
+  // GLOBAL BANNER
+  const banner = (
+    <div
+      style={{
+        width: "100%",
+        display: "flex",
+        justifyContent: "center",
+        paddingTop: "10px",
+        paddingBottom: "10px",
+      }}
+    >
+      <img
+        src="/mamas-banner.png"
+        alt="Mama's Jamaican Kitchen"
+        style={{
+          width: "100%",
+          maxWidth: "700px",
+          borderRadius: "12px",
+        }}
+      />
+    </div>
+  );
+
   // LOADING
   if (loading) {
     return (
-      <div
-        style={{
-          padding: 40,
-          fontFamily: "Arial",
-        }}
-      >
-        Loading venue...
+      <div style={pageStyle}>
+        {banner}
+
+        <div
+          style={{
+            padding: 40,
+            textAlign: "center",
+            fontSize: "22px",
+            fontWeight: "bold",
+          }}
+        >
+          Loading venue...
+        </div>
       </div>
     );
   }
@@ -70,29 +103,58 @@ export default function App() {
   // VENUE NOT FOUND
   if (!selectedVenue) {
     return (
-      <div
-        style={{
-          padding: 40,
-          fontFamily: "Arial",
-        }}
-      >
-        Venue not found.
+      <div style={pageStyle}>
+        {banner}
+
+        <div
+          style={{
+            padding: 40,
+            textAlign: "center",
+            fontSize: "22px",
+            fontWeight: "bold",
+          }}
+        >
+          Venue not found.
+        </div>
       </div>
     );
   }
 
-  // ROUTES
+  // KITCHEN
   if (hash === "#/kitchen") {
-    return <Kitchen venue={selectedVenue} />;
+    return (
+      <div style={pageStyle}>
+        {banner}
+        <Kitchen venue={selectedVenue} />
+      </div>
+    );
   }
 
+  // BAR
   if (hash === "#/bar") {
-    return <Bar venue={selectedVenue} />;
+    return (
+      <div style={pageStyle}>
+        {banner}
+        <Bar venue={selectedVenue} />
+      </div>
+    );
   }
 
+  // ADMIN
   if (hash === "#/admin") {
-    return <Admin venue={selectedVenue} />;
+    return (
+      <div style={pageStyle}>
+        {banner}
+        <Admin venue={selectedVenue} />
+      </div>
+    );
   }
 
-  return <Ordering venue={selectedVenue} />;
+  // ORDERING PAGE
+  return (
+    <div style={pageStyle}>
+      {banner}
+      <Ordering venue={selectedVenue} />
+    </div>
+  );
 }
