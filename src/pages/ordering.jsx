@@ -21,14 +21,23 @@ export default function Ordering({ venue }) {
     loadMenu();
   }, [venue]);
 
-  // Add item to cart
+  // Add item to cart with correct station
   const addToCart = (item) => {
-    // Attach station explicitly
+    const category = String(item.category || "").toLowerCase().trim();
+
+    const station =
+      category === "food"
+        ? "kitchen"
+        : category === "drink"
+        ? "bar"
+        : "unknown";
+
     const cartItem = {
       ...item,
-      station: item.category === "food" ? "kitchen" : "bar",
+      station,
     };
-    setCart([...cart, cartItem]);
+
+    setCart((prev) => [...prev, cartItem]);
   };
 
   // Place order
