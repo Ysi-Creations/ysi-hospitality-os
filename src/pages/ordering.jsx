@@ -6,7 +6,7 @@ export default function Ordering({ venue }) {
   const [cart, setCart] = useState([]);
   const [menu, setMenu] = useState([]);
 
-  // Load menu from Supabase
+  // Load menu
   useEffect(() => {
     const loadMenu = async () => {
       if (!venue?.id) return;
@@ -21,26 +21,20 @@ export default function Ordering({ venue }) {
     loadMenu();
   }, [venue]);
 
-  // Add item to cart with correct station
+  // ADD TO CART WITH STATION ENFORCEMENT
   const addToCart = (item) => {
-    const category = String(item.category || "").toLowerCase().trim();
+    const category = String(item.category || "").trim().toLowerCase();
 
-    const station =
-      category === "food"
-        ? "kitchen"
-        : category === "drink"
-        ? "bar"
-        : "unknown";
+    let station = "unknown";
+    if (category === "food") station = "kitchen";
+    if (category === "drink") station = "bar";
 
-    const cartItem = {
-      ...item,
-      station,
-    };
+    const cartItem = { ...item, station };
 
     setCart((prev) => [...prev, cartItem]);
   };
 
-  // Place order
+  // PLACE ORDER
   const placeOrder = async () => {
     if (!table || cart.length === 0) {
       alert("Enter table number and select items");
@@ -104,7 +98,7 @@ export default function Ordering({ venue }) {
       {cart.length === 0 && <p>Your cart is empty.</p>}
       {cart.map((item, i) => (
         <div key={i} style={{ background: "#fff", padding: 10, marginBottom: 10, borderRadius: 8 }}>
-          {item.name} - L.E {item.price}
+          {item.name} - L.E {item.price} ({item.station})
         </div>
       ))}
 
