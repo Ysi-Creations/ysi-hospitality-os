@@ -72,29 +72,42 @@ export default function Admin({ venue }) {
       style={{
         padding: 20,
         minHeight: "100vh",
-        backgroundColor: "#f5f5f5",
+        backgroundColor: "#e7b94f",
         fontFamily: "Arial",
       }}
     >
-      {/* LOGO */}
-      {venue?.logo && (
-        <div style={{ textAlign: "center", marginBottom: 20 }}>
-          <img
-            src={venue.logo}
-            alt={venue.name}
-            style={{ height: 90, objectFit: "contain" }}
-          />
-        </div>
-      )}
+      {/* BANNER */}
+      <div style={{ textAlign: "center", marginBottom: 20 }}>
+        <img
+          src="/mamas-banner.png"
+          alt="Mama's Jamaican Kitchen"
+          style={{
+            width: "100%",
+            maxWidth: 700,
+            borderRadius: 12,
+          }}
+        />
+      </div>
 
-      <h1 style={{ color: venue?.theme_color || "#000", marginBottom: 20 }}>
+      <h1
+        style={{
+          color: "#000",
+          marginBottom: 20,
+          textAlign: "center",
+        }}
+      >
         📊 {venue?.name} Admin
       </h1>
 
-      {Object.keys(grouped).length === 0 && <p>No active orders.</p>}
+      {Object.keys(grouped).length === 0 && (
+        <p style={{ textAlign: "center" }}>No active orders.</p>
+      )}
 
       {Object.entries(grouped).map(([table, items]) => {
-        const total = items.reduce((sum, o) => sum + Number(o.total_price || 0), 0);
+        const total = items.reduce(
+          (sum, o) => sum + Number(o.total_price || 0),
+          0
+        );
 
         const isPaid = items.every((o) => o.status === "paid");
 
@@ -103,7 +116,6 @@ export default function Admin({ venue }) {
             key={table}
             style={{
               background: "#fff",
-              border: `2px solid ${venue?.theme_color || "#000"}`,
               borderRadius: 10,
               padding: 15,
               marginBottom: 15,
@@ -113,25 +125,37 @@ export default function Admin({ venue }) {
             <h2>Table {table}</h2>
 
             {items.map((o) => (
-              <div key={o.id} style={{ marginBottom: 12, paddingBottom: 10, borderBottom: "1px solid #ddd" }}>
+              <div
+                key={o.id}
+                style={{
+                  marginBottom: 12,
+                  paddingBottom: 10,
+                  borderBottom: "1px solid #ddd",
+                }}
+              >
                 <p>
                   {o.items
                     ?.map((i) =>
-                      String(i.category).toLowerCase() === "food" ? `🍔 ${i.name}` : `🥤 ${i.name}`
+                      String(i.category).toLowerCase() === "food"
+                        ? `🍔 ${i.name}`
+                        : `🥤 ${i.name}`
                     )
                     .join(", ")}
                 </p>
+
                 <p>L.E {o.total_price}</p>
+
                 <p>Status: {o.status}</p>
               </div>
             ))}
 
             <h3>Total: L.E {total}</h3>
+
             {!isPaid && (
               <button
                 onClick={() => markPaid(table)}
                 style={{
-                  backgroundColor: venue?.theme_color || "#000",
+                  backgroundColor: "#000",
                   color: "#fff",
                   border: "none",
                   padding: "10px 14px",
@@ -146,8 +170,15 @@ export default function Admin({ venue }) {
         );
       })}
 
-      <footer style={{ marginTop: 40, textAlign: "center", color: "#777" }}>
-        © {venue?.name || "Hospitality OS"} <br /> Powered by Ysi Creations
+      <footer
+        style={{
+          marginTop: 40,
+          textAlign: "center",
+          color: "#777",
+        }}
+      >
+        © {venue?.name || "Mama's Jamaican Kitchen"} <br />
+        Powered by Ysi Creations
       </footer>
     </div>
   );
