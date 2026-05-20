@@ -77,7 +77,7 @@ export default function Ordering() {
       <h3>Menu</h3>
       {menu.map((item, i) => (
         <div key={i} style={{ marginBottom: 10 }}>
-          {item.name} - ${item.price}
+          {item.name} - L.E{item.price}
           <button onClick={() => addToCart(item)} style={{ marginLeft: 10 }}>
             Add
           </button>
@@ -92,7 +92,7 @@ export default function Ordering() {
       ))}
 
       <h3>
-        Total: ${cart.reduce((sum, item) => sum + item.price, 0)}
+        Total: L.E{cart.reduce((sum, item) => sum + item.price, 0)}
       </h3>
 
       <button onClick={placeOrder}>Place Order</button>
