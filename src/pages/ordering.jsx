@@ -10,6 +10,16 @@ export default function Ordering() {
     { name: "Fries", price: 5, category: "food" },
     { name: "Coke", price: 3, category: "drink" },
     { name: "Beer", price: 6, category: "drink" },
+
+    // Jamaican Menu Additions
+    { name: "Brown Stew Liver and Rice", price: 300, category: "food", station: "kitchen" },
+    { name: "6 Wings (BBQ, Spicy, Jerk)", price: 50, category: "food", station: "kitchen" },
+    { name: "BBQ Chicken", price: 320, category: "food", station: "kitchen" },
+    { name: "Spicy Chicken", price: 320, category: "food", station: "kitchen" },
+    { name: "Rice & Peas", price: 120, category: "food", station: "kitchen" },
+    { name: "Dumplins", price: 110, category: "food", station: "kitchen" },
+    { name: "Festivals", price: 130, category: "food", station: "kitchen" },
+    { name: "Mama's Sorrel Drink (Caribbean Hibiscus)", price: 150, category: "drink", station: "kitchen" },
   ];
 
   const addToCart = (item) => {
@@ -30,6 +40,7 @@ export default function Ordering() {
         items: cart,
         total_price: total_price,
         status: "new",
+        created_at: new Date().toISOString(), // timestamp added
       },
     ]);
 
@@ -39,7 +50,7 @@ export default function Ordering() {
       return;
     }
 
-    alert("Order placed!");
+    alert("Thank you for placing your order!"); // Thank you message
 
     setCart([]);
     setTable("");
