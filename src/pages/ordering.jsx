@@ -5,21 +5,29 @@ export default function Ordering() {
   const [table, setTable] = useState("");
   const [cart, setCart] = useState([]);
 
+  // Full Jamaican Menu
   const menu = [
-    { name: "Burger", price: 10, category: "food" },
-    { name: "Fries", price: 5, category: "food" },
-    { name: "Coke", price: 3, category: "drink" },
-    { name: "Beer", price: 6, category: "drink" },
+    { name: "1 Brown Stew Liver and Rice", price: 300, category: "food", station: "kitchen", available: true },
 
-    // Jamaican Menu Additions
-    { name: "Brown Stew Liver and Rice", price: 300, category: "food", station: "kitchen" },
-    { name: "6 Wings (BBQ, Spicy, Jerk)", price: 50, category: "food", station: "kitchen" },
-    { name: "BBQ Chicken", price: 320, category: "food", station: "kitchen" },
-    { name: "Spicy Chicken", price: 320, category: "food", station: "kitchen" },
-    { name: "Rice & Peas", price: 120, category: "food", station: "kitchen" },
-    { name: "Dumplins", price: 110, category: "food", station: "kitchen" },
-    { name: "Festivals", price: 130, category: "food", station: "kitchen" },
-    { name: "Mama's Sorrel Drink (Caribbean Hibiscus)", price: 150, category: "drink", station: "kitchen" },
+    // Wings options
+    { name: "1 Wing (BBQ, Spicy, Jerk)", price: 50, category: "food", station: "kitchen", available: true },
+    { name: "2 Wings (BBQ, Spicy, Jerk)", price: 100, category: "food", station: "kitchen", available: true },
+    { name: "3 Wings (BBQ, Spicy, Jerk)", price: 150, category: "food", station: "kitchen", available: true },
+    { name: "4 Wings (BBQ, Spicy, Jerk)", price: 200, category: "food", station: "kitchen", available: true },
+    { name: "5 Wings (BBQ, Spicy, Jerk)", price: 250, category: "food", station: "kitchen", available: true },
+    { name: "6 Wings (BBQ, Spicy, Jerk)", price: 300, category: "food", station: "kitchen", available: true },
+
+    // Main meals
+    { name: "BBQ Chicken", price: 320, category: "food", station: "kitchen", available: true },
+    { name: "Spicy Chicken", price: 320, category: "food", station: "kitchen", available: true },
+
+    // Sides
+    { name: "Rice & Peas", price: 120, category: "food", station: "kitchen", available: true },
+    { name: "Dumplins", price: 110, category: "food", station: "kitchen", available: true },
+    { name: "Festivals", price: 130, category: "food", station: "kitchen", available: true },
+
+    // Drink
+    { name: "Mama's Sorrel Drink (Caribbean Hibiscus)", price: 150, category: "drink", station: "kitchen", available: true },
   ];
 
   const addToCart = (item) => {
@@ -84,8 +92,7 @@ export default function Ordering() {
       ))}
 
       <h3>
-        Total: $
-        {cart.reduce((sum, item) => sum + item.price, 0)}
+        Total: ${cart.reduce((sum, item) => sum + item.price, 0)}
       </h3>
 
       <button onClick={placeOrder}>Place Order</button>
