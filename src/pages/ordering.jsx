@@ -23,8 +23,8 @@ export default function Ordering() {
 
     // Sides
     { name: "Rice & Peas", price: 120, category: "food", station: "kitchen", available: true },
-    { name: "Dumplins", price: 110, category: "food", station: "kitchen", available: true },
-    { name: "Festivals", price: 130, category: "food", station: "kitchen", available: true },
+    { name: "Dumplin", price: 110, category: "food", station: "kitchen", available: true },
+    { name: "Festival", price: 130, category: "food", station: "kitchen", available: true },
 
     // Drink
     { name: "Mama's Sorrel Drink (Caribbean Hibiscus)", price: 150, category: "drink", station: "kitchen", available: true },
