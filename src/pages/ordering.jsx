@@ -229,7 +229,7 @@ export default function Ordering() {
         <h2>Sides</h2>
         <QuantitySelector title="Rice" unitPrice={100} addQuantityItem={addQuantityItem} />
         <QuantitySelector title="Rice & Peas" unitPrice={120} addQuantityItem={addQuantityItem} />
-        <QuantitySelector title="Fries" unitPrice={50} addQuantityItem={addQuantityItem} />
+        <QuantitySelector title="Fries" unitPrice={100} addQuantityItem={addQuantityItem} />
         <QuantitySelector title="Dumplin" unitPrice={110} addQuantityItem={addQuantityItem} />
         <QuantitySelector title="Festival" unitPrice={130} addQuantityItem={addQuantityItem} />
       </div>
