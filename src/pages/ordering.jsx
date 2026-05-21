@@ -176,109 +176,64 @@ export default function Ordering() {
       <div style={{ marginBottom: 30 }}>
         <h2>Chicken Meals</h2>
 
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-          <button
-            onClick={() =>
-              addToCart({
-                name: "BBQ Chicken Meal",
-                price: 320,
-              })
-            }
-          >
-            BBQ Chicken Meal - 320 EGP
-          </button>
+        <QuantitySelector
+          title="BBQ Chicken Meal"
+          unitPrice={320}
+          addQuantityItem={addQuantityItem}
+        />
 
-          <button
-            onClick={() =>
-              addToCart({
-                name: "Spicy Chicken Meal",
-                price: 320,
-              })
-            }
-          >
-            Spicy Chicken Meal - 320 EGP
-          </button>
+        <QuantitySelector
+          title="Spicy Chicken Meal"
+          unitPrice={320}
+          addQuantityItem={addQuantityItem}
+        />
 
-          <button
-            onClick={() =>
-              addToCart({
-                name: "Jerk Chicken Meal",
-                price: 320,
-              })
-            }
-          >
-            Jerk Chicken Meal - 320 EGP
-          </button>
-        </div>
+        <QuantitySelector
+          title="Jerk Chicken Meal"
+          unitPrice={320}
+          addQuantityItem={addQuantityItem}
+        />
       </div>
 
       {/* Liver */}
       <div style={{ marginBottom: 30 }}>
         <h2>Liver Dishes</h2>
 
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-          <button
-            onClick={() =>
-              addToCart({
-                name: "Brown Stew Liver",
-                price: 230,
-              })
-            }
-          >
-            Brown Stew Liver - 230 EGP
-          </button>
+        <QuantitySelector
+          title="Brown Stew Liver"
+          unitPrice={230}
+          addQuantityItem={addQuantityItem}
+        />
 
-          <button
-            onClick={() =>
-              addToCart({
-                name: "Brown Stew Liver & Rice",
-                price: 300,
-              })
-            }
-          >
-            Brown Stew Liver & Rice - 300 EGP
-          </button>
-        </div>
+        <QuantitySelector
+          title="Brown Stew Liver & Rice"
+          unitPrice={300}
+          addQuantityItem={addQuantityItem}
+        />
       </div>
 
       {/* Sides */}
       <div style={{ marginBottom: 30 }}>
         <h2>Sides</h2>
 
-        <div style={{ marginBottom: 15 }}>
-          <button
-            onClick={() =>
-              addToCart({
-                name: "Rice",
-                price: 100,
-              })
-            }
-          >
-            Add Rice - 100 EGP
-          </button>
-        </div>
+        <QuantitySelector
+          title="Rice"
+          unitPrice={100}
+          addQuantityItem={addQuantityItem}
+        />
 
-        <div style={{ marginBottom: 15 }}>
-          <button
-            onClick={() =>
-              addToCart({
-                name: "Rice & Peas",
-                price: 120,
-              })
-            }
-          >
-            Add Rice & Peas - 120 EGP
-          </button>
-        </div>
+        <QuantitySelector
+          title="Rice & Peas"
+          unitPrice={120}
+          addQuantityItem={addQuantityItem}
+        />
 
-        {/* Dumplin */}
         <QuantitySelector
           title="Dumplin"
           unitPrice={110}
           addQuantityItem={addQuantityItem}
         />
 
-        {/* Festival */}
         <QuantitySelector
           title="Festival"
           unitPrice={130}
