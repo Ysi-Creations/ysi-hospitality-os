@@ -65,9 +65,8 @@ export default function Ordering() {
 
   // Submit Order
   const placeOrder = async () => {
-    // Only require table number for Eat In
-    if (orderType === "Eat In" && !table) {
-      alert("Please enter table number for Eat In orders.");
+    if (!table || cart.length === 0) {
+      alert("Please enter table number and select items.");
       return;
     }
 
@@ -77,9 +76,7 @@ export default function Ordering() {
     }
 
     const confirmOrder = window.confirm(
-      `PLEASE CONFIRM YOUR ORDER\n\n${
-        orderType === "Eat In" ? `Table: ${table}\n` : ""
-      }Order Type: ${orderType}${
+      `PLEASE CONFIRM YOUR ORDER\n\nTable: ${table}\nOrder Type: ${orderType}${
         orderType === "Takeaway" ? `\nPickup Area: ${pickupArea}\nLandmark: ${landmark}` : ""
       }\n\n${cart
         .map((item) => `${item.name} - ${item.price} EGP`)
@@ -91,15 +88,14 @@ export default function Ordering() {
     const kitchenItems = cart.filter((item) => item.category === "food");
     const drinkItems = cart.filter((item) => item.category === "drink");
 
-    // Convert items to JSON for Supabase
     const { error } = await supabase.from("orders").insert([
       {
-        table_number: orderType === "Eat In" ? table : null,
+        table_number: table,
         order_type: orderType,
         pickup_area: orderType === "Takeaway" ? pickupArea : null,
         landmark: orderType === "Takeaway" ? landmark : null,
-        items: JSON.stringify(kitchenItems),
-        drinks: JSON.stringify(drinkItems),
+        items: kitchenItems,
+        drinks: drinkItems,
         total_price: totalPrice,
         status: "new",
         created_at: new Date().toISOString(),
@@ -125,17 +121,15 @@ export default function Ordering() {
       <h1>Mama's Jamaican Kitchen</h1>
 
       {/* Table */}
-      {orderType === "Eat In" && (
-        <div style={{ marginBottom: 20 }}>
-          <input
-            type="text"
-            placeholder="Enter Table Number"
-            value={table}
-            onChange={(e) => setTable(e.target.value)}
-            style={{ width: "100%", padding: 12, fontSize: 16 }}
-          />
-        </div>
-      )}
+      <div style={{ marginBottom: 20 }}>
+        <input
+          type="text"
+          placeholder="Enter Table Number"
+          value={table}
+          onChange={(e) => setTable(e.target.value)}
+          style={{ width: "100%", padding: 12, fontSize: 16 }}
+        />
+      </div>
 
       {/* Order Type */}
       <div style={{ marginBottom: 20 }}>
@@ -171,14 +165,127 @@ export default function Ordering() {
         )}
       </div>
 
-      {/* rest of your menu sections remain unchanged */}
-      {/* ... Wings, Chicken, Meals, Liver, Sides, Drinks, Desserts, Cart */}
-      {/* No changes except above fixes */}
+      {/* Wings */}
+      <div style={{ marginBottom: 30 }}>
+        <h2>Chicken Wings</h2>
+        <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
+          <select value={wingQty} onChange={(e) => setWingQty(Number(e.target.value))}>
+            {[1, 2, 3, 4, 5, 6].map((num) => (
+              <option key={num} value={num}>
+                {num} Wing{num > 1 ? "s" : ""}
+              </option>
+            ))}
+          </select>
+
+          <select value={wingFlavor} onChange={(e) => setWingFlavor(e.target.value)}>
+            <option>BBQ</option>
+            <option>Spicy</option>
+            <option>Jerk</option>
+          </select>
+
+          <button onClick={addWings}>Add Wings</button>
+        </div>
+      </div>
+
+      {/* Chicken Only */}
+      <div style={{ marginBottom: 30 }}>
+        <h2>Chicken Only</h2>
+        <div style={{ display: "flex", gap: 10 }}>
+          <select value={chickenQty} onChange={(e) => setChickenQty(Number(e.target.value))}>
+            {[1, 2, 3, 4, 5, 6].map((num) => (
+              <option key={num} value={num}>
+                {num} Piece{num > 1 ? "s" : ""}
+              </option>
+            ))}
+          </select>
+
+          <select value={chickenFlavor} onChange={(e) => setChickenFlavor(e.target.value)}>
+            <option>BBQ</option>
+            <option>Spicy</option>
+            <option>Jerk</option>
+          </select>
+
+          <button onClick={addChicken}>Add Chicken</button>
+        </div>
+      </div>
+
+      {/* Chicken Meals */}
+      <div style={{ marginBottom: 30 }}>
+        <h2>Chicken Meals</h2>
+        <QuantitySelector title="BBQ Chicken Meal" unitPrice={320} addQuantityItem={addQuantityItem} />
+        <QuantitySelector title="Spicy Chicken Meal" unitPrice={320} addQuantityItem={addQuantityItem} />
+        <QuantitySelector title="Jerk Chicken Meal" unitPrice={320} addQuantityItem={addQuantityItem} />
+      </div>
+
+      {/* Liver */}
+      <div style={{ marginBottom: 30 }}>
+        <h2>Liver Dishes</h2>
+        <QuantitySelector title="Brown Stew Liver" unitPrice={230} addQuantityItem={addQuantityItem} />
+        <QuantitySelector title="Brown Stew Liver & Rice" unitPrice={300} addQuantityItem={addQuantityItem} />
+      </div>
+
+      {/* Sides */}
+      <div style={{ marginBottom: 30 }}>
+        <h2>Sides</h2>
+        <QuantitySelector title="Rice" unitPrice={100} addQuantityItem={addQuantityItem} />
+        <QuantitySelector title="Rice & Peas" unitPrice={120} addQuantityItem={addQuantityItem} />
+        <QuantitySelector title="Fries" unitPrice={50} addQuantityItem={addQuantityItem} />
+        <QuantitySelector title="Dumplin" unitPrice={110} addQuantityItem={addQuantityItem} />
+        <QuantitySelector title="Festival" unitPrice={130} addQuantityItem={addQuantityItem} />
+      </div>
+
+      {/* Drinks */}
+      <div style={{ marginBottom: 30 }}>
+        <h2>Drinks</h2>
+        <QuantitySelector
+          title="Mama's Caribbean Healthy Sorrel Drink"
+          unitPrice={150}
+          addQuantityItem={addQuantityItem}
+        />
+      </div>
+
+      {/* Desserts */}
+      <div style={{ marginBottom: 30 }}>
+        <h2>Desserts</h2>
+        <QuantitySelector title="Spiced Bun Slice" unitPrice={25} addQuantityItem={addQuantityItem} />
+        <QuantitySelector title="Caribbean Toto Coconut Cake Slice" unitPrice={45} addQuantityItem={addQuantityItem} />
+      </div>
+
+      {/* Cart */}
+      <div style={{ marginBottom: 30 }}>
+        <h2>Cart</h2>
+        {cart.length === 0 && <p>No items added.</p>}
+        {cart.map((item, index) => (
+          <div
+            key={index}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              marginBottom: 10,
+              borderBottom: "1px solid #ccc",
+              paddingBottom: 5,
+            }}
+          >
+            <div>
+              {item.name} - {item.price} EGP
+            </div>
+            <button onClick={() => removeFromCart(index)}>REMOVE</button>
+          </div>
+        ))}
+        <h2>Total: {totalPrice} EGP</h2>
+      </div>
+
+      <button
+        onClick={placeOrder}
+        style={{ width: "100%", padding: 15, fontSize: 18, fontWeight: "bold" }}
+      >
+        PLACE ORDER
+      </button>
     </div>
   );
 }
 
-// Quantity Component remains unchanged
+// Quantity Component
 function QuantitySelector({ title, unitPrice, addQuantityItem }) {
   const [qty, setQty] = useState(1);
 
