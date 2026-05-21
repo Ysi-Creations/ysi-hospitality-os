@@ -88,32 +88,37 @@ export default function Ordering() {
     const kitchenItems = cart.filter((item) => item.category === "food");
     const drinkItems = cart.filter((item) => item.category === "drink");
 
-    const { error } = await supabase.from("orders").insert([
-      {
-        table_number: table,
-        order_type: orderType,
-        pickup_area: orderType === "Takeaway" ? pickupArea : null,
-        landmark: orderType === "Takeaway" ? landmark : null,
-        items: kitchenItems,
-        drinks: drinkItems,
-        total_price: totalPrice,
-        status: "new",
-        created_at: new Date().toISOString(),
-      },
-    ]);
+    try {
+      const { error } = await supabase.from("orders").insert([
+        {
+          table_number: table,
+          order_type: orderType,
+          pickup_area: orderType === "Takeaway" ? pickupArea : null,
+          landmark: orderType === "Takeaway" ? landmark : null,
+          items: JSON.stringify(kitchenItems), // <-- stringify objects
+          drinks: JSON.stringify(drinkItems),   // <-- stringify objects
+          total_price: totalPrice,
+          status: "new",
+          created_at: new Date().toISOString(),
+        },
+      ]);
 
-    if (error) {
-      console.error(error);
+      if (error) {
+        console.error("Supabase Insert Error:", error);
+        alert("Error placing order.");
+        return;
+      }
+
+      alert("Thank you for placing your order!");
+      setCart([]);
+      setTable("");
+      setPickupArea("");
+      setLandmark("");
+      setOrderType("Eat In");
+    } catch (err) {
+      console.error("Unexpected Error:", err);
       alert("Error placing order.");
-      return;
     }
-
-    alert("Thank you for placing your order!");
-    setCart([]);
-    setTable("");
-    setPickupArea("");
-    setLandmark("");
-    setOrderType("Eat In");
   };
 
   return (
@@ -228,78 +233,4 @@ export default function Ordering() {
       <div style={{ marginBottom: 30 }}>
         <h2>Sides</h2>
         <QuantitySelector title="Rice" unitPrice={100} addQuantityItem={addQuantityItem} />
-        <QuantitySelector title="Rice & Peas" unitPrice={120} addQuantityItem={addQuantityItem} />
-        <QuantitySelector title="Fries" unitPrice={100} addQuantityItem={addQuantityItem} />
-        <QuantitySelector title="Dumplin" unitPrice={110} addQuantityItem={addQuantityItem} />
-        <QuantitySelector title="Festival" unitPrice={130} addQuantityItem={addQuantityItem} />
-      </div>
-
-      {/* Drinks */}
-      <div style={{ marginBottom: 30 }}>
-        <h2>Drinks</h2>
-        <QuantitySelector
-          title="Mama's Caribbean Healthy Sorrel Drink"
-          unitPrice={150}
-          addQuantityItem={addQuantityItem}
-        />
-      </div>
-
-      {/* Desserts */}
-      <div style={{ marginBottom: 30 }}>
-        <h2>Desserts</h2>
-        <QuantitySelector title="Spiced Bun Slice" unitPrice={25} addQuantityItem={addQuantityItem} />
-        <QuantitySelector title="Caribbean Toto Coconut Cake Slice" unitPrice={45} addQuantityItem={addQuantityItem} />
-      </div>
-
-      {/* Cart */}
-      <div style={{ marginBottom: 30 }}>
-        <h2>Cart</h2>
-        {cart.length === 0 && <p>No items added.</p>}
-        {cart.map((item, index) => (
-          <div
-            key={index}
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              marginBottom: 10,
-              borderBottom: "1px solid #ccc",
-              paddingBottom: 5,
-            }}
-          >
-            <div>
-              {item.name} - {item.price} EGP
-            </div>
-            <button onClick={() => removeFromCart(index)}>REMOVE</button>
-          </div>
-        ))}
-        <h2>Total: {totalPrice} EGP</h2>
-      </div>
-
-      <button
-        onClick={placeOrder}
-        style={{ width: "100%", padding: 15, fontSize: 18, fontWeight: "bold" }}
-      >
-        PLACE ORDER
-      </button>
-    </div>
-  );
-}
-
-// Quantity Component
-function QuantitySelector({ title, unitPrice, addQuantityItem }) {
-  const [qty, setQty] = useState(1);
-
-  return (
-    <div style={{ marginBottom: 20 }}>
-      <h4>
-        {title} - {unitPrice} EGP each
-      </h4>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <button onClick={() => setQty(Math.max(1, qty - 1))}>-</button>
-        <span>{qty}</span>
-        <button onClick={() => setQty(qty + 1)}>+</button>
-        <button onClick={() => addQuantityItem(title, qty, unitPrice)}>Add</button>
-      </div>
-    </div>
-  );
-}
+        <QuantitySelector title="Rice & Peas" unitPrice={120} addQuantityItem={addQuantity
