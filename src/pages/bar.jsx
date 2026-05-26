@@ -15,15 +15,13 @@ export default function Bar() {
       return;
     }
 
-    // ✅ ONLY SHOW DRINK ITEMS
+    // ✅ ONLY SHOW DRINK ORDERS
     const drinkOrders = (data || [])
       .map((order) => ({
         ...order,
-        items: (order.items || []).filter(
-          (i) => i.category === "drink"
-        ),
+        drinks: order.drinks || [],
       }))
-      .filter((order) => order.items.length > 0);
+      .filter((order) => order.drinks.length > 0);
 
     setOrders(drinkOrders);
   };
@@ -60,7 +58,9 @@ export default function Bar() {
     <div style={{ padding: 20 }}>
       <h1>🍹 Bar Orders</h1>
 
-      {orders.length === 0 && <p>No drink orders yet...</p>}
+      {orders.length === 0 && (
+        <p>No drink orders yet...</p>
+      )}
 
       {orders.map((o) => (
         <div
@@ -71,13 +71,25 @@ export default function Bar() {
             marginBottom: 10,
           }}
         >
-          <h3>Table {o.table_number}</h3>
+          <h3>
+            {o.order_type === "Takeaway"
+              ? "Takeaway Order"
+              : `Table ${o.table_number}`}
+          </h3>
 
-          {o.items.map((i, idx) => (
-            <p key={idx}>🥤 {i.name}</p>
+          {/* Drinks Only */}
+          {o.drinks.map((i, idx) => (
+            <p key={idx}>
+              🥤 {i.name} - {i.price} EGP
+            </p>
           ))}
 
           <p>Status: {o.status}</p>
+
+          <p>
+            Date:{" "}
+            {new Date(o.created_at).toLocaleString()}
+          </p>
 
           <button onClick={() => markReady(o.id)}>
             Mark as Ready
