@@ -59,15 +59,20 @@ export default function Ordering() {
       name: `${qty} ${name}`,
       quantity: qty,
       price: qty * unitPrice,
-      category: ["Mama's Caribbean Healthy Sorrel Drink"].includes(name)
-        ? "drink"
-        : "food",
+      category:
+        ["Mama's Caribbean Healthy Sorrel Drink"].includes(name)
+          ? "drink"
+          : "food",
     });
   };
 
   // Submit Order
   const placeOrder = async () => {
-    if (!table || cart.length === 0) {
+    // FIXED VALIDATION
+    if (
+      (orderType === "Eat In" && !table) ||
+      cart.length === 0
+    ) {
       alert("Please enter table number and select items.");
       return;
     }
@@ -78,7 +83,11 @@ export default function Ordering() {
     }
 
     const confirmOrder = window.confirm(
-      `PLEASE CONFIRM YOUR ORDER\n\nTable: ${table}\nOrder Type: ${orderType}${
+      `PLEASE CONFIRM YOUR ORDER\n\n${
+        orderType === "Eat In"
+          ? `Table: ${table}`
+          : `Takeaway Order`
+      }\nOrder Type: ${orderType}${
         orderType === "Takeaway"
           ? `\nPickup Area: ${pickupArea}\nLandmark: ${landmark}`
           : ""
@@ -89,6 +98,7 @@ export default function Ordering() {
 
     if (!confirmOrder) return;
 
+    // Separate kitchen and drinks
     const kitchenItems = cart.filter(
       (item) => item.category === "food"
     );
@@ -98,41 +108,61 @@ export default function Ordering() {
     );
 
     try {
-      const { error } = await supabase.from("orders").insert([
-        {
-          table_number: table,
-          order_type: orderType,
-          pickup_area:
-            orderType === "Takeaway" ? pickupArea : null,
-          landmark:
-            orderType === "Takeaway" ? landmark : null,
+      const { error } = await supabase
+        .from("orders")
+        .insert([
+          {
+            table_number:
+              orderType === "Eat In"
+                ? table
+                : null,
 
-          // FIXED
-          items: kitchenItems,
-          drinks: drinkItems,
+            order_type: orderType,
 
-          total_price: totalPrice,
-          status: "new",
-          created_at: new Date().toISOString(),
-        },
-      ]);
+            pickup_area:
+              orderType === "Takeaway"
+                ? pickupArea
+                : null,
+
+            landmark:
+              orderType === "Takeaway"
+                ? landmark || null
+                : null,
+
+            // FIXED JSON INSERT
+            items: kitchenItems,
+
+            drinks: drinkItems,
+
+            total_price: Number(totalPrice),
+
+            status: "new",
+
+            // DATE & TIME
+            created_at: new Date().toISOString(),
+          },
+        ]);
 
       if (error) {
-        console.error("Supabase Insert Error:", error);
-        alert("Error placing order.");
+        console.error("SUPABASE ERROR:", error);
+        alert(error.message);
         return;
       }
 
-      alert("Thank you for placing your order!");
+      alert(
+        "Thank you for placing your order! Your order has been successfully placed."
+      );
 
+      // Reset
       setCart([]);
       setTable("");
       setPickupArea("");
       setLandmark("");
       setOrderType("Eat In");
+
     } catch (err) {
-      console.error("Unexpected Error:", err);
-      alert("Error placing order.");
+      console.error("UNEXPECTED ERROR:", err);
+      alert("Unexpected system error.");
     }
   };
 
