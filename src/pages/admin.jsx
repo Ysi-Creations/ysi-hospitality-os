@@ -77,11 +77,11 @@ export default function Admin() {
                   🍽{" "}
                   {o.items?.map((i) => i.name).join(", ")}
                 </p>
-                <p>£{o.total_price}</p>
+                <p>L.E{o.total_price}</p>
               </div>
             ))}
 
-            <h3>Total: £{total}</h3>
+            <h3>Total: L.E{total}</h3>
 
             <p>Status: {isPaid ? "PAID ✅" : "UNPAID ❌"}</p>
 
