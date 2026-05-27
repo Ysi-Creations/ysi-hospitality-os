@@ -5,9 +5,13 @@ export default function Bar() {
   const [orders, setOrders] = useState([]);
 
   // ALERT SOUND
-  const alertSound = new Audio(
-    "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
-  );
+  const playAlert = () => {
+    const audio = new Audio(
+      "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
+    );
+
+    audio.play();
+  };
 
   const loadOrders = async () => {
     const { data, error } = await supabase
@@ -38,9 +42,13 @@ export default function Bar() {
       .channel("bar-orders")
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "orders" },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "orders",
+        },
         () => {
-          alertSound.play();
+          playAlert();
           loadOrders();
         }
       )
@@ -52,10 +60,16 @@ export default function Bar() {
   }, []);
 
   const markReady = async (id) => {
-    await supabase
+    const { error } = await supabase
       .from("orders")
       .update({ status: "ready" })
       .eq("id", id);
+
+    if (error) {
+      console.log(error);
+      alert("Error updating order status");
+      return;
+    }
 
     loadOrders();
   };
