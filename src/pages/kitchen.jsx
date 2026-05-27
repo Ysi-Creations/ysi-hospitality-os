@@ -4,6 +4,11 @@ import { supabase } from "../lib/supabaseClient";
 export default function Kitchen() {
   const [orders, setOrders] = useState([]);
 
+  // ALERT SOUND
+  const alertSound = new Audio(
+    "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
+  );
+
   const loadOrders = async () => {
     const { data, error } = await supabase
       .from("orders")
@@ -33,8 +38,9 @@ export default function Kitchen() {
       .channel("kitchen-orders")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "orders" },
+        { event: "INSERT", schema: "public", table: "orders" },
         () => {
+          alertSound.play();
           loadOrders();
         }
       )
