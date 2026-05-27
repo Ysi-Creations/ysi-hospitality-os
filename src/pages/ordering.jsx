@@ -68,7 +68,6 @@ export default function Ordering() {
 
   // Submit Order
   const placeOrder = async () => {
-    // FIXED VALIDATION
     if (
       (orderType === "Eat In" && !table) ||
       cart.length === 0
@@ -98,7 +97,6 @@ export default function Ordering() {
 
     if (!confirmOrder) return;
 
-    // Separate kitchen and drinks
     const kitchenItems = cart.filter(
       (item) => item.category === "food"
     );
@@ -129,7 +127,6 @@ export default function Ordering() {
                 ? landmark || null
                 : null,
 
-            // FIXED JSON INSERT
             items: kitchenItems,
 
             drinks: drinkItems,
@@ -138,7 +135,6 @@ export default function Ordering() {
 
             status: "new",
 
-            // DATE & TIME
             created_at: new Date().toISOString(),
           },
         ]);
@@ -153,7 +149,6 @@ export default function Ordering() {
         "Thank you for placing your order! Your order has been successfully placed."
       );
 
-      // Reset
       setCart([]);
       setTable("");
       setPickupArea("");
@@ -178,7 +173,7 @@ export default function Ordering() {
           value={table}
           onChange={(e) => setTable(e.target.value)}
           style={{
-            width: "100%",
+            width: "180px",
             padding: 12,
             fontSize: 16,
           }}
@@ -270,238 +265,6 @@ export default function Ordering() {
             Add Wings
           </button>
         </div>
-      </div>
-
-      {/* Chicken Only */}
-      <div style={{ marginBottom: 30 }}>
-        <h2>Chicken Only</h2>
-
-        <div style={{ display: "flex", gap: 10 }}>
-          <select
-            value={chickenQty}
-            onChange={(e) =>
-              setChickenQty(Number(e.target.value))
-            }
-          >
-            {[1, 2, 3, 4, 5, 6].map((num) => (
-              <option key={num} value={num}>
-                {num} Piece{num > 1 ? "s" : ""}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={chickenFlavor}
-            onChange={(e) =>
-              setChickenFlavor(e.target.value)
-            }
-          >
-            <option>BBQ</option>
-            <option>Spicy</option>
-            <option>Jerk</option>
-          </select>
-
-          <button onClick={addChicken}>
-            Add Chicken
-          </button>
-        </div>
-      </div>
-
-      {/* Chicken Meals */}
-      <div style={{ marginBottom: 30 }}>
-        <h2>Chicken Meals</h2>
-
-        <QuantitySelector
-          title="BBQ Chicken Meal"
-          unitPrice={320}
-          addQuantityItem={addQuantityItem}
-        />
-
-        <QuantitySelector
-          title="Spicy Chicken Meal"
-          unitPrice={320}
-          addQuantityItem={addQuantityItem}
-        />
-
-        <QuantitySelector
-          title="Jerk Chicken Meal"
-          unitPrice={320}
-          addQuantityItem={addQuantityItem}
-        />
-      </div>
-
-      {/* Liver */}
-      <div style={{ marginBottom: 30 }}>
-        <h2>Liver Dishes</h2>
-
-        <QuantitySelector
-          title="Brown Stew Liver"
-          unitPrice={230}
-          addQuantityItem={addQuantityItem}
-        />
-
-        <QuantitySelector
-          title="Brown Stew Liver & Rice"
-          unitPrice={300}
-          addQuantityItem={addQuantityItem}
-        />
-      </div>
-
-      {/* Sides */}
-      <div style={{ marginBottom: 30 }}>
-        <h2>Sides</h2>
-
-        <QuantitySelector
-          title="Rice"
-          unitPrice={100}
-          addQuantityItem={addQuantityItem}
-        />
-
-        <QuantitySelector
-          title="Rice & Peas"
-          unitPrice={120}
-          addQuantityItem={addQuantityItem}
-        />
-
-        <QuantitySelector
-          title="Fries"
-          unitPrice={50}
-          addQuantityItem={addQuantityItem}
-        />
-
-        <QuantitySelector
-          title="Dumplin"
-          unitPrice={110}
-          addQuantityItem={addQuantityItem}
-        />
-
-        <QuantitySelector
-          title="Festival"
-          unitPrice={130}
-          addQuantityItem={addQuantityItem}
-        />
-      </div>
-
-      {/* Drinks */}
-      <div style={{ marginBottom: 30 }}>
-        <h2>Drinks</h2>
-
-        <QuantitySelector
-          title="Mama's Caribbean Healthy Sorrel Drink"
-          unitPrice={150}
-          addQuantityItem={addQuantityItem}
-        />
-      </div>
-
-      {/* Desserts */}
-      <div style={{ marginBottom: 30 }}>
-        <h2>Desserts</h2>
-
-        <QuantitySelector
-          title="Spiced Bun Slice"
-          unitPrice={25}
-          addQuantityItem={addQuantityItem}
-        />
-
-        <QuantitySelector
-          title="Caribbean Toto Coconut Cake Slice"
-          unitPrice={45}
-          addQuantityItem={addQuantityItem}
-        />
-      </div>
-
-      {/* Cart */}
-      <div style={{ marginBottom: 30 }}>
-        <h2>Cart</h2>
-
-        {cart.length === 0 && (
-          <p>No items added.</p>
-        )}
-
-        {cart.map((item, index) => (
-          <div
-            key={index}
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              marginBottom: 10,
-              borderBottom: "1px solid #ccc",
-              paddingBottom: 5,
-            }}
-          >
-            <div>
-              {item.name} - {item.price} EGP
-            </div>
-
-            <button
-              onClick={() => removeFromCart(index)}
-            >
-              REMOVE
-            </button>
-          </div>
-        ))}
-
-        <h2>Total: {totalPrice} EGP</h2>
-      </div>
-
-      {/* Submit */}
-      <button
-        onClick={placeOrder}
-        style={{
-          width: "100%",
-          padding: 15,
-          fontSize: 18,
-          fontWeight: "bold",
-        }}
-      >
-        PLACE ORDER
-      </button>
-    </div>
-  );
-}
-
-// Quantity Component
-function QuantitySelector({
-  title,
-  unitPrice,
-  addQuantityItem,
-}) {
-  const [qty, setQty] = useState(1);
-
-  return (
-    <div style={{ marginBottom: 20 }}>
-      <h4>
-        {title} - {unitPrice} EGP each
-      </h4>
-
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-        }}
-      >
-        <button
-          onClick={() =>
-            setQty(Math.max(1, qty - 1))
-          }
-        >
-          -
-        </button>
-
-        <span>{qty}</span>
-
-        <button onClick={() => setQty(qty + 1)}>
-          +
-        </button>
-
-        <button
-          onClick={() =>
-            addQuantityItem(title, qty, unitPrice)
-          }
-        >
-          Add
-        </button>
       </div>
     </div>
   );
