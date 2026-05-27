@@ -4,11 +4,6 @@ import { supabase } from "../lib/supabaseClient";
 export default function Admin() {
   const [orders, setOrders] = useState([]);
 
-  // ALERT SOUND
-  const alertSound = new Audio(
-    "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
-  );
-
   const loadOrders = async () => {
     const { data, error } = await supabase
       .from("orders")
@@ -27,11 +22,8 @@ export default function Admin() {
       .channel("admin-orders")
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "orders" },
-        () => {
-          alertSound.play();
-          loadOrders();
-        }
+        { event: "*", schema: "public", table: "orders" },
+        () => loadOrders()
       )
       .subscribe();
 
