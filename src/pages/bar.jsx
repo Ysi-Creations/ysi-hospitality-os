@@ -4,6 +4,11 @@ import { supabase } from "../lib/supabaseClient";
 export default function Bar() {
   const [orders, setOrders] = useState([]);
 
+  // ALERT SOUND
+  const alertSound = new Audio(
+    "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
+  );
+
   const loadOrders = async () => {
     const { data, error } = await supabase
       .from("orders")
@@ -15,7 +20,7 @@ export default function Bar() {
       return;
     }
 
-    // ✅ ONLY SHOW DRINK ORDERS
+    // ONLY SHOW DRINK ORDERS
     const drinkOrders = (data || [])
       .map((order) => ({
         ...order,
@@ -35,6 +40,7 @@ export default function Bar() {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "orders" },
         () => {
+          alertSound.play();
           loadOrders();
         }
       )
