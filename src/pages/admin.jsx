@@ -10,7 +10,9 @@ export default function Admin() {
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (!error) setOrders(data || []);
+    if (!error) {
+      setOrders(data || []);
+    }
   };
 
   useEffect(() => {
@@ -30,69 +32,100 @@ export default function Admin() {
     };
   }, []);
 
-  const markPaid = async (tableNumber) => {
+  const markPaid = async (id) => {
     await supabase
       .from("orders")
       .update({ status: "paid" })
-      .eq("table_number", tableNumber)
-      .neq("status", "paid");
+      .eq("id", id);
 
     loadOrders();
   };
-
-  const grouped = orders.reduce((acc, order) => {
-    if (!acc[order.table_number]) acc[order.table_number] = [];
-    acc[order.table_number].push(order);
-    return acc;
-  }, {});
 
   return (
     <div style={{ padding: 20 }}>
       <h1>📊 ADMIN DASHBOARD</h1>
 
-      {Object.keys(grouped).length === 0 && <p>No orders yet...</p>}
+      {orders.length === 0 && (
+        <p>No orders yet...</p>
+      )}
 
-      {Object.entries(grouped).map(([table, items]) => {
-        const total = items.reduce(
-          (sum, o) => sum + (o.total_price || 0),
-          0
-        );
+      {orders.map((o) => (
+        <div
+          key={o.id}
+          style={{
+            border: "2px solid black",
+            padding: 15,
+            marginBottom: 15,
+          }}
+        >
+          <h2>
+            {o.order_type === "Takeaway"
+              ? "Takeaway Order"
+              : `Table ${o.table_number}`}
+          </h2>
 
-        const isPaid = items.every((o) => o.status === "paid");
+          {/* FOOD */}
+          {o.items?.length > 0 && (
+            <div>
+              <h3>🍳 Kitchen Items</h3>
 
-        return (
-          <div
-            key={table}
-            style={{
-              border: "2px solid black",
-              padding: 15,
-              marginBottom: 15,
-            }}
-          >
-            <h2>Table {table}</h2>
-
-            {items.map((o) => (
-              <div key={o.id}>
-                <p>
-                  🍽{" "}
-                  {o.items?.map((i) => i.name).join(", ")}
+              {o.items.map((i, idx) => (
+                <p key={idx}>
+                  {i.name} - {i.price} EGP
                 </p>
-                <p>L.E{o.total_price}</p>
-              </div>
-            ))}
+              ))}
+            </div>
+          )}
 
-            <h3>Total: L.E{total}</h3>
+          {/* DRINKS */}
+          {o.drinks?.length > 0 && (
+            <div>
+              <h3>🍹 Drinks</h3>
 
-            <p>Status: {isPaid ? "PAID ✅" : "UNPAID ❌"}</p>
+              {o.drinks.map((i, idx) => (
+                <p key={idx}>
+                  {i.name} - {i.price} EGP
+                </p>
+              ))}
+            </div>
+          )}
 
-            {!isPaid && (
-              <button onClick={() => markPaid(table)}>
-                Mark Table as Paid
-              </button>
-            )}
-          </div>
-        );
-      })}
+          <p>
+            <strong>Total:</strong>{" "}
+            {o.total_price} EGP
+          </p>
+
+          <p>
+            <strong>Status:</strong>{" "}
+            {o.status}
+          </p>
+
+          <p>
+            <strong>Date & Time:</strong>{" "}
+            {new Date(o.created_at).toLocaleString()}
+          </p>
+
+          {o.order_type === "Takeaway" && (
+            <>
+              <p>
+                <strong>Pickup Area:</strong>{" "}
+                {o.pickup_area}
+              </p>
+
+              <p>
+                <strong>Landmark:</strong>{" "}
+                {o.landmark}
+              </p>
+            </>
+          )}
+
+          {o.status !== "paid" && (
+            <button onClick={() => markPaid(o.id)}>
+              Mark as Paid
+            </button>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
