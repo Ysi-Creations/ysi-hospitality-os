@@ -5,9 +5,13 @@ export default function Kitchen() {
   const [orders, setOrders] = useState([]);
 
   // ALERT SOUND
-  const alertSound = new Audio(
-    "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
-  );
+  const playAlert = () => {
+    const audio = new Audio(
+      "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
+    );
+
+    audio.play();
+  };
 
   const loadOrders = async () => {
     const { data, error } = await supabase
@@ -38,9 +42,13 @@ export default function Kitchen() {
       .channel("kitchen-orders")
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "orders" },
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "orders",
+        },
         () => {
-          alertSound.play();
+          playAlert();
           loadOrders();
         }
       )
@@ -52,55 +60,11 @@ export default function Kitchen() {
   }, []);
 
   const markReady = async (id) => {
-    await supabase
+    const { error } = await supabase
       .from("orders")
       .update({ status: "ready" })
       .eq("id", id);
 
-    loadOrders();
-  };
-
-  return (
-    <div style={{ padding: 20 }}>
-      <h1>🍳 Kitchen Orders</h1>
-
-      {orders.length === 0 && (
-        <p>No food orders yet...</p>
-      )}
-
-      {orders.map((o) => (
-        <div
-          key={o.id}
-          style={{
-            border: "2px solid black",
-            padding: 10,
-            marginBottom: 10,
-          }}
-        >
-          <h3>
-            {o.order_type === "Takeaway"
-              ? "Takeaway Order"
-              : `Table ${o.table_number}`}
-          </h3>
-
-          {o.items.map((i, idx) => (
-            <p key={idx}>
-              🍽 {i.name} - {i.price} EGP
-            </p>
-          ))}
-
-          <p>Status: {o.status}</p>
-
-          <p>
-            Date & Time:{" "}
-            {new Date(o.created_at).toLocaleString()}
-          </p>
-
-          <button onClick={() => markReady(o.id)}>
-            Mark as Ready
-          </button>
-        </div>
-      ))}
-    </div>
-  );
-}
+    if (error) {
+      console.log(error);
+      alert("Error
