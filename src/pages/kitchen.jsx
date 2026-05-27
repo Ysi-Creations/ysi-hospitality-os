@@ -15,12 +15,13 @@ export default function Kitchen() {
       return;
     }
 
-    // ✅ ONLY SHOW FOOD ITEMS
-    const foodOrders = (data || []).map((order) => ({
-      ...order,
-      items: (order.items || []).filter((i) => i.category === "food"),
-    }))
-    .filter((order) => order.items.length > 0);
+    // ONLY SHOW FOOD ITEMS
+    const foodOrders = (data || [])
+      .map((order) => ({
+        ...order,
+        items: order.items || [],
+      }))
+      .filter((order) => order.items.length > 0);
 
     setOrders(foodOrders);
   };
@@ -32,7 +33,7 @@ export default function Kitchen() {
       .channel("kitchen-orders")
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "orders" },
+        { event: "*", schema: "public", table: "orders" },
         () => {
           loadOrders();
         }
@@ -57,7 +58,9 @@ export default function Kitchen() {
     <div style={{ padding: 20 }}>
       <h1>🍳 Kitchen Orders</h1>
 
-      {orders.length === 0 && <p>No food orders yet...</p>}
+      {orders.length === 0 && (
+        <p>No food orders yet...</p>
+      )}
 
       {orders.map((o) => (
         <div
@@ -68,13 +71,24 @@ export default function Kitchen() {
             marginBottom: 10,
           }}
         >
-          <h3>Table {o.table_number}</h3>
+          <h3>
+            {o.order_type === "Takeaway"
+              ? "Takeaway Order"
+              : `Table ${o.table_number}`}
+          </h3>
 
           {o.items.map((i, idx) => (
-            <p key={idx}>🍔 {i.name}</p>
+            <p key={idx}>
+              🍽 {i.name} - {i.price} EGP
+            </p>
           ))}
 
           <p>Status: {o.status}</p>
+
+          <p>
+            Date & Time:{" "}
+            {new Date(o.created_at).toLocaleString()}
+          </p>
 
           <button onClick={() => markReady(o.id)}>
             Mark as Ready
