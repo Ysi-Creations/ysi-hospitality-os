@@ -4,6 +4,15 @@ import { supabase } from "../lib/supabaseClient";
 export default function Admin() {
   const [orders, setOrders] = useState([]);
 
+  // ALERT SOUND
+  const playAlert = () => {
+    const audio = new Audio(
+      "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
+    );
+
+    audio.play();
+  };
+
   const loadOrders = async () => {
     const { data, error } = await supabase
       .from("orders")
@@ -22,8 +31,11 @@ export default function Admin() {
       .channel("admin-orders")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "orders" },
-        () => loadOrders()
+        { event: "INSERT", schema: "public", table: "orders" },
+        () => {
+          playAlert();
+          loadOrders();
+        }
       )
       .subscribe();
 
@@ -33,10 +45,16 @@ export default function Admin() {
   }, []);
 
   const markPaid = async (id) => {
-    await supabase
+    const { error } = await supabase
       .from("orders")
       .update({ status: "paid" })
       .eq("id", id);
+
+    if (error) {
+      console.log(error);
+      alert("Error updating payment status");
+      return;
+    }
 
     loadOrders();
   };
