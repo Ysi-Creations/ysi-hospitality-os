@@ -107,7 +107,6 @@ export default function Ordering() {
           landmark:
             orderType === "Takeaway" ? landmark : null,
 
-          // FIXED
           items: kitchenItems,
           drinks: drinkItems,
 
@@ -148,7 +147,7 @@ export default function Ordering() {
           value={table}
           onChange={(e) => setTable(e.target.value)}
           style={{
-            width: "100%",
+            width: "220px",
             padding: 12,
             fontSize: 16,
           }}
