@@ -12,7 +12,7 @@ export default function Bar() {
 
     audio.volume = 1;
 
-    audio.play().catch((err) => {
+    audio.play().catch(() => {
       console.log("Sound blocked until user interacts with page");
     });
   };
@@ -64,30 +64,23 @@ export default function Bar() {
   }, []);
 
   const markReady = async (id) => {
-    try {
-      const { data, error } = await supabase
-        .from("orders")
-        .update({
-          status: "ready",
-        })
-        .match({ id: id })
-        .select();
+    console.log("Updating order:", id);
 
-      if (error) {
-        console.log("UPDATE ERROR:", error);
-        alert("Failed to update order");
-        return;
-      }
+    const { data, error } = await supabase
+      .from("orders")
+      .update({ status: "ready" })
+      .eq("id", id)
+      .select();
 
-      console.log("UPDATED:", data);
+    console.log("DATA:", data);
+    console.log("ERROR:", error);
 
-      alert("Order marked ready");
-
-      loadOrders();
-    } catch (err) {
-      console.log("UNEXPECTED ERROR:", err);
+    if (error) {
       alert("Failed to update order");
+      return;
     }
+
+    loadOrders();
   };
 
   return (
@@ -117,7 +110,6 @@ export default function Bar() {
               : `Table ${o.table_number}`}
           </h3>
 
-          {/* Drinks Only */}
           {o.drinks.map((i, idx) => (
             <p key={idx}>
               🥤 {i.name} - {i.price} EGP
