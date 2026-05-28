@@ -10,7 +10,11 @@ export default function Kitchen() {
       "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
     );
 
-    audio.play();
+    audio.volume = 1;
+
+    audio.play().catch((err) => {
+      console.log("Sound blocked until user interacts with page");
+    });
   };
 
   const loadOrders = async () => {
@@ -67,4 +71,58 @@ export default function Kitchen() {
 
     if (error) {
       console.log(error);
-      alert("Error
+      alert("Failed to update order");
+      return;
+    }
+
+    loadOrders();
+  };
+
+  return (
+    <div style={{ padding: 20 }}>
+      <h1>🍳 Kitchen Orders</h1>
+
+      <button onClick={playAlert}>
+        Enable Sound
+      </button>
+
+      {orders.length === 0 && (
+        <p>No food orders yet...</p>
+      )}
+
+      {orders.map((o) => (
+        <div
+          key={o.id}
+          style={{
+            border: "2px solid black",
+            padding: 10,
+            marginBottom: 10,
+          }}
+        >
+          <h3>
+            {o.order_type === "Takeaway"
+              ? "Takeaway Order"
+              : `Table ${o.table_number}`}
+          </h3>
+
+          {o.items.map((i, idx) => (
+            <p key={idx}>
+              🍽 {i.name} - {i.price} EGP
+            </p>
+          ))}
+
+          <p>Status: {o.status}</p>
+
+          <p>
+            Date & Time:{" "}
+            {new Date(o.created_at).toLocaleString()}
+          </p>
+
+          <button onClick={() => markReady(o.id)}>
+            Mark as Ready
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
