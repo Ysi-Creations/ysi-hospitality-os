@@ -56,24 +56,23 @@ export default function Admin() {
   }, []);
 
   const markPaid = async (id) => {
-    const { error } = await supabase
+    console.log("Updating payment:", id);
+
+    const { data, error } = await supabase
       .from("orders")
       .update({ status: "paid" })
-      .eq("id", id);
+      .eq("id", id)
+      .select();
+
+    console.log("DATA:", data);
+    console.log("ERROR:", error);
 
     if (error) {
-      console.log(error);
-      alert("Failed to update payment status");
+      alert("Failed to update payment");
       return;
     }
 
-    setOrders((current) =>
-      current.map((order) =>
-        order.id === id
-          ? { ...order, status: "paid" }
-          : order
-      )
-    );
+    loadOrders();
   };
 
   return (
@@ -103,7 +102,6 @@ export default function Admin() {
               : `Table ${o.table_number}`}
           </h2>
 
-          {/* FOOD */}
           {o.items?.length > 0 && (
             <div>
               <h3>🍳 Kitchen Items</h3>
@@ -116,7 +114,6 @@ export default function Admin() {
             </div>
           )}
 
-          {/* DRINKS */}
           {o.drinks?.length > 0 && (
             <div>
               <h3>🍹 Drinks</h3>
