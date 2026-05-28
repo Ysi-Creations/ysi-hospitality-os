@@ -10,7 +10,11 @@ export default function Bar() {
       "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
     );
 
-    audio.play();
+    audio.volume = 1;
+
+    audio.play().catch((err) => {
+      console.log("Sound blocked until user interacts with page");
+    });
   };
 
   const loadOrders = async () => {
@@ -60,23 +64,39 @@ export default function Bar() {
   }, []);
 
   const markReady = async (id) => {
-    const { error } = await supabase
-      .from("orders")
-      .update({ status: "ready" })
-      .eq("id", id);
+    try {
+      const { data, error } = await supabase
+        .from("orders")
+        .update({
+          status: "ready",
+        })
+        .match({ id: id })
+        .select();
 
-    if (error) {
-      console.log(error);
-      alert("Error updating order status");
-      return;
+      if (error) {
+        console.log("UPDATE ERROR:", error);
+        alert("Failed to update order");
+        return;
+      }
+
+      console.log("UPDATED:", data);
+
+      alert("Order marked ready");
+
+      loadOrders();
+    } catch (err) {
+      console.log("UNEXPECTED ERROR:", err);
+      alert("Failed to update order");
     }
-
-    loadOrders();
   };
 
   return (
     <div style={{ padding: 20 }}>
       <h1>🍹 Bar Orders</h1>
+
+      <button onClick={playAlert}>
+        Enable Sound
+      </button>
 
       {orders.length === 0 && (
         <p>No drink orders yet...</p>
