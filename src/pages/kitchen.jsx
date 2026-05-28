@@ -64,18 +64,30 @@ export default function Kitchen() {
   }, []);
 
   const markReady = async (id) => {
-    const { error } = await supabase
-      .from("orders")
-      .update({ status: "ready" })
-      .eq("id", id);
+    try {
+      const { data, error } = await supabase
+        .from("orders")
+        .update({
+          status: "ready",
+        })
+        .match({ id: id })
+        .select();
 
-    if (error) {
-      console.log(error);
+      if (error) {
+        console.log("UPDATE ERROR:", error);
+        alert("Failed to update order");
+        return;
+      }
+
+      console.log("UPDATED:", data);
+
+      alert("Order marked ready");
+
+      loadOrders();
+    } catch (err) {
+      console.log("UNEXPECTED ERROR:", err);
       alert("Failed to update order");
-      return;
     }
-
-    loadOrders();
   };
 
   return (
