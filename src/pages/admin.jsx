@@ -39,17 +39,13 @@ export default function Admin() {
       .on(
         "postgres_changes",
         {
-          event: "INSERT",
+          event: "*",
           schema: "public",
           table: "orders",
         },
-        (payload) => {
+        () => {
           playAlert();
-
-          setOrders((current) => [
-            payload.new,
-            ...current,
-          ]);
+          loadOrders();
         }
       )
       .subscribe();
