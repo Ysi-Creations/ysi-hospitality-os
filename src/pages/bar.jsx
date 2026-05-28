@@ -47,7 +47,7 @@ export default function Bar() {
       .on(
         "postgres_changes",
         {
-          event: "INSERT",
+          event: "*",
           schema: "public",
           table: "orders",
         },
