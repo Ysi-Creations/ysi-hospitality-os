@@ -10,7 +10,11 @@ export default function Admin() {
       "https://actions.google.com/sounds/v1/alarms/beep_short.ogg"
     );
 
-    audio.play();
+    audio.volume = 1;
+
+    audio.play().catch(() => {
+      console.log("Sound blocked until user interacts with page");
+    });
   };
 
   const loadOrders = async () => {
@@ -19,9 +23,12 @@ export default function Admin() {
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (!error) {
-      setOrders(data || []);
+    if (error) {
+      console.log(error);
+      return;
     }
+
+    setOrders(data || []);
   };
 
   useEffect(() => {
@@ -31,10 +38,18 @@ export default function Admin() {
       .channel("admin-orders")
       .on(
         "postgres_changes",
-        { event: "INSERT", schema: "public", table: "orders" },
-        () => {
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "orders",
+        },
+        (payload) => {
           playAlert();
-          loadOrders();
+
+          setOrders((current) => [
+            payload.new,
+            ...current,
+          ]);
         }
       )
       .subscribe();
@@ -52,16 +67,26 @@ export default function Admin() {
 
     if (error) {
       console.log(error);
-      alert("Error updating payment status");
+      alert("Failed to update payment status");
       return;
     }
 
-    loadOrders();
+    setOrders((current) =>
+      current.map((order) =>
+        order.id === id
+          ? { ...order, status: "paid" }
+          : order
+      )
+    );
   };
 
   return (
     <div style={{ padding: 20 }}>
       <h1>📊 ADMIN DASHBOARD</h1>
+
+      <button onClick={playAlert}>
+        Enable Sound
+      </button>
 
       {orders.length === 0 && (
         <p>No orders yet...</p>
