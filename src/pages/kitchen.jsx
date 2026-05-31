@@ -76,7 +76,7 @@ export default function Kitchen() {
     console.log("ERROR:", error);
 
     if (error) {
-      alert("Failed to update order");
+      alert(JSON.stringify(error, null, 2));
       return;
     }
 
