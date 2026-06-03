@@ -1,67 +1,74 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
+const dishInfo = {
+  "Fry Fish Meal": {
+    desc: "Whole fried fish served with meal sides. Crispy outside, soft inside.",
+    calories: "650–850 kcal",
+    allergens: "Fish",
+  },
+  "Fry Fish": {
+    desc: "Whole fish fried Jamaican-style, seasoned and golden.",
+    calories: "450–600 kcal",
+    allergens: "Fish",
+  },
+  "Jamaican Rundown Meal": {
+    desc: "Fish simmered in coconut milk with Caribbean spices.",
+    calories: "600–800 kcal",
+    allergens: "Fish, Coconut",
+  },
+  "Jamaican Rundown": {
+    desc: "Classic coconut fish stew with rich island flavour.",
+    calories: "400–600 kcal",
+    allergens: "Fish, Coconut",
+  },
+  "Fish Fritters (3 Pieces)": {
+    desc: "Crispy fried seasoned fish bites.",
+    calories: "300–400 kcal",
+    allergens: "Fish, Gluten",
+  },
+  "Peanut Punch": {
+    desc: "Creamy peanut drink blended with milk and spice.",
+    calories: "250–400 kcal",
+    allergens: "Peanuts, Dairy",
+  },
+  "Mama's Caribbean Healthy Sorrel Drink": {
+    desc: "Traditional hibiscus Caribbean drink.",
+    calories: "120–180 kcal",
+    allergens: "None",
+  },
+};
+
 export default function Ordering() {
   const [table, setTable] = useState("");
   const [cart, setCart] = useState([]);
 
-  // Wings
-  const [wingQty, setWingQty] = useState(1);
-  const [wingFlavor, setWingFlavor] = useState("BBQ");
+  const [selectedDish, setSelectedDish] = useState(null);
 
-  // Chicken Only
-  const [chickenQty, setChickenQty] = useState(1);
-  const [chickenFlavor, setChickenFlavor] = useState("BBQ");
-
-  // Order type
   const [orderType, setOrderType] = useState("Eat In");
   const [pickupArea, setPickupArea] = useState("");
   const [landmark, setLandmark] = useState("");
 
-  // BOT STATE
-  const [selectedDish, setSelectedDish] = useState(null);
+  const addToCart = (item) => setCart([...cart, item]);
 
-  // Helpers
-  const addToCart = (item) => {
-    setCart([...cart, item]);
+  const removeFromCart = (i) => {
+    const copy = [...cart];
+    copy.splice(i, 1);
+    setCart(copy);
   };
 
-  const removeFromCart = (index) => {
-    const updated = [...cart];
-    updated.splice(index, 1);
-    setCart(updated);
-  };
+  const totalPrice = cart.reduce((a, b) => a + b.price, 0);
 
-  const totalPrice = cart.reduce((sum, item) => sum + item.price, 0);
-
-  const addWings = () => {
-    addToCart({
-      name: `${wingQty} Wing${wingQty > 1 ? "s" : ""} - ${wingFlavor}`,
-      price: wingQty * 50,
-      quantity: wingQty,
-      category: "food",
-    });
-  };
-
-  const addChicken = () => {
-    addToCart({
-      name: `${chickenQty} Chicken Piece${chickenQty > 1 ? "s" : ""} - ${chickenFlavor}`,
-      price: chickenQty * 160,
-      quantity: chickenQty,
-      category: "food",
-    });
-  };
-
-  const addQuantityItem = (name, qty, unitPrice) => {
-    if (qty <= 0) return;
+  const addQuantityItem = (name, qty, price) => {
+    if (!qty) return;
 
     addToCart({
       name: `${qty} ${name}`,
       quantity: qty,
-      price: qty * unitPrice,
+      price: qty * price,
       category: [
-        "Mama's Caribbean Healthy Sorrel Drink",
         "Peanut Punch",
+        "Mama's Caribbean Healthy Sorrel Drink",
       ].includes(name)
         ? "drink"
         : "food",
@@ -70,50 +77,39 @@ export default function Ordering() {
 
   const placeOrder = async () => {
     if (!table || cart.length === 0) {
-      alert("Please enter table number and select items.");
+      alert("Add table + items");
       return;
     }
 
     if (orderType === "Takeaway" && !pickupArea) {
-      alert("Please select pickup area for takeaway orders.");
+      alert("Select pickup area");
       return;
     }
 
-    const confirmOrder = window.confirm(
-      `PLEASE CONFIRM YOUR ORDER\n\nTable: ${table}\nOrder Type: ${orderType}${
-        orderType === "Takeaway"
-          ? `\nPickup Area: ${pickupArea}\nLandmark: ${landmark}`
-          : ""
-      }\n\n${cart
-        .map((item) => `${item.name} - ${item.price} EGP`)
-        .join("\n")}\n\nTOTAL: ${totalPrice} EGP`
+    const confirm = window.confirm(
+      `Table: ${table}\nType: ${orderType}\n\n` +
+        cart.map((i) => `${i.name} - ${i.price}`).join("\n") +
+        `\n\nTOTAL: ${totalPrice}`
     );
 
-    if (!confirmOrder) return;
+    if (!confirm) return;
 
-    const kitchenItems = cart.filter((item) => item.category === "food");
-    const drinkItems = cart.filter((item) => item.category === "drink");
+    const kitchen = cart.filter((i) => i.category === "food");
+    const drinks = cart.filter((i) => i.category === "drink");
 
-    const { error } = await supabase.from("orders").insert([
+    await supabase.from("orders").insert([
       {
         table_number: table,
         order_type: orderType,
         pickup_area: orderType === "Takeaway" ? pickupArea : null,
         landmark: orderType === "Takeaway" ? landmark : null,
-        items: kitchenItems,
-        drinks: drinkItems,
+        items: kitchen,
+        drinks,
         total_price: totalPrice,
         status: "new",
         created_at: new Date().toISOString(),
       },
     ]);
-
-    if (error) {
-      alert("Error placing order.");
-      return;
-    }
-
-    alert("Order placed!");
 
     setCart([]);
     setTable("");
@@ -123,169 +119,96 @@ export default function Ordering() {
   };
 
   return (
-    <div style={{ padding: 20, maxWidth: 700, margin: "0 auto" }}>
+    <div style={{ padding: 20, maxWidth: 700, margin: "auto" }}>
       <h1>Mama's Jamaican Kitchen</h1>
 
+      {/* TABLE */}
       <input
-        placeholder="Enter Table Number"
+        placeholder="Table Number"
         value={table}
         onChange={(e) => setTable(e.target.value)}
-        style={{ padding: 10, marginBottom: 20 }}
+        style={{ padding: 10, marginBottom: 15 }}
       />
 
-      {/* CHICKEN MEALS */}
-      <div>
-        <h2>Chicken Meals</h2>
+      {/* ORDER TYPE (RESTORED) */}
+      <div style={{ marginBottom: 20 }}>
+        <h3>Order Type</h3>
 
-        <QuantitySelector
-          title="BBQ Chicken Meal"
-          unitPrice={320}
-          addQuantityItem={addQuantityItem}
-          setSelectedDish={setSelectedDish}
-        />
+        <select value={orderType} onChange={(e) => setOrderType(e.target.value)}>
+          <option>Eat In</option>
+          <option>Takeaway</option>
+        </select>
 
-        <QuantitySelector
-          title="Spicy Chicken Meal"
-          unitPrice={320}
-          addQuantityItem={addQuantityItem}
-          setSelectedDish={setSelectedDish}
-        />
+        {orderType === "Takeaway" && (
+          <div style={{ marginTop: 10 }}>
+            <select
+              value={pickupArea}
+              onChange={(e) => setPickupArea(e.target.value)}
+            >
+              <option value="">Select Pickup Area</option>
+              <option>Asala</option>
+              <option>Mashraba</option>
+              <option>Lighthouse</option>
+              <option>Eel Garden</option>
+              <option>Medina</option>
+              <option>Mubarak</option>
+              <option>Laguna</option>
+              <option>Other</option>
+            </select>
 
-        <QuantitySelector
-          title="Jerk Chicken Meal"
-          unitPrice={320}
-          addQuantityItem={addQuantityItem}
-          setSelectedDish={setSelectedDish}
-        />
-
-        <QuantitySelector
-          title="Curry Chicken Meal"
-          unitPrice={350}
-          addQuantityItem={addQuantityItem}
-          setSelectedDish={setSelectedDish}
-        />
-
-        <QuantitySelector
-          title="Curry Chicken"
-          unitPrice={250}
-          addQuantityItem={addQuantityItem}
-          setSelectedDish={setSelectedDish}
-        />
-      </div>
-
-      {/* LIVER */}
-      <div>
-        <h2>Liver Dishes</h2>
-
-        <QuantitySelector
-          title="Brown Stew Liver"
-          unitPrice={230}
-          addQuantityItem={addQuantityItem}
-          setSelectedDish={setSelectedDish}
-        />
-
-        <QuantitySelector
-          title="Brown Stew Liver & Rice"
-          unitPrice={300}
-          addQuantityItem={addQuantityItem}
-          setSelectedDish={setSelectedDish}
-        />
-      </div>
-
-      {/* FISH */}
-      <div>
-        <h2>Fish Dishes</h2>
-
-        <QuantitySelector
-          title="Fry Fish Meal"
-          unitPrice={350}
-          addQuantityItem={addQuantityItem}
-          setSelectedDish={setSelectedDish}
-        />
-
-        <QuantitySelector
-          title="Fry Fish"
-          unitPrice={140}
-          addQuantityItem={addQuantityItem}
-          setSelectedDish={setSelectedDish}
-        />
-
-        <QuantitySelector
-          title="Jamaican Rundown Meal"
-          unitPrice={350}
-          addQuantityItem={addQuantityItem}
-          setSelectedDish={setSelectedDish}
-        />
-
-        <QuantitySelector
-          title="Jamaican Rundown"
-          unitPrice={250}
-          addQuantityItem={addQuantityItem}
-          setSelectedDish={setSelectedDish}
-        />
-
-        <QuantitySelector
-          title="Fish Fritters (3 Pieces)"
-          unitPrice={100}
-          addQuantityItem={addQuantityItem}
-          setSelectedDish={setSelectedDish}
-        />
-      </div>
-
-      {/* DRINKS */}
-      <div>
-        <h2>Drinks</h2>
-
-        <QuantitySelector
-          title="Mama's Caribbean Healthy Sorrel Drink"
-          unitPrice={150}
-          addQuantityItem={addQuantityItem}
-          setSelectedDish={setSelectedDish}
-        />
-
-        <QuantitySelector
-          title="Peanut Punch"
-          unitPrice={150}
-          addQuantityItem={addQuantityItem}
-          setSelectedDish={setSelectedDish}
-        />
+            <input
+              placeholder="Landmark"
+              value={landmark}
+              onChange={(e) => setLandmark(e.target.value)}
+              style={{ display: "block", marginTop: 10, width: "100%" }}
+            />
+          </div>
+        )}
       </div>
 
       {/* CART */}
-      <div>
-        <h2>Cart</h2>
-
-        {cart.map((item, i) => (
-          <div key={i}>
-            {item.name} - {item.price}
-            <button onClick={() => removeFromCart(i)}>X</button>
+      <div style={{ marginBottom: 20 }}>
+        <h3>Cart</h3>
+        {cart.map((i, idx) => (
+          <div key={idx}>
+            {i.name} - {i.price}
+            <button onClick={() => removeFromCart(idx)}>X</button>
           </div>
         ))}
-
         <h3>Total: {totalPrice}</h3>
       </div>
 
       <button onClick={placeOrder}>PLACE ORDER</button>
 
-      {/* BOT POPUP */}
+      {/* BOT (MOBILE SAFE SMALL BOX) */}
       {selectedDish && (
         <div
           style={{
             position: "fixed",
-            bottom: 20,
-            right: 20,
+            bottom: 10,
+            right: 10,
+            width: 220,
+            fontSize: 12,
             background: "#111",
             color: "#fff",
-            padding: 15,
-            width: 300,
-            borderRadius: 10,
+            padding: 10,
+            borderRadius: 8,
+            zIndex: 9999,
           }}
         >
-          <h3>{selectedDish}</h3>
-          <p>Simple tasty Jamaican-style description coming here.</p>
-          <p>🔥 Calories info included in full system</p>
-          <p>⚠️ Allergy info included where relevant</p>
-          <p>🇯🇲 Mama says: Respect the flavour!</p>
+          <strong>{selectedDish}</strong>
+
+          <p style={{ margin: "5px 0" }}>
+            {dishInfo[selectedDish]?.desc}
+          </p>
+
+          <p style={{ margin: "5px 0" }}>
+            🔥 {dishInfo[selectedDish]?.calories}
+          </p>
+
+          <p style={{ margin: "5px 0" }}>
+            ⚠️ {dishInfo[selectedDish]?.allergens}
+          </p>
 
           <button onClick={() => setSelectedDish(null)}>
             Close
