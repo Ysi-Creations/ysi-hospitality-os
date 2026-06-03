@@ -334,7 +334,7 @@ export default function Ordering() {
 
         <QuantitySelector
           title="Fries"
-          unitPrice={50}
+          unitPrice={80}
           addQuantityItem={addQuantityItem}
         />
 
