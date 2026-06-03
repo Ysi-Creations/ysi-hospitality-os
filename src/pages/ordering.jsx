@@ -6,17 +6,17 @@ import { supabase } from "../lib/supabaseClient";
 ========================= */
 const dishInfo = {
   "BBQ Chicken Meal": {
-    desc: "Jamaican BBQ chicken served with rice and sides. Smoky, sweet and savoury flavour.",
+    desc: "Smoky BBQ chicken served with rice and sides.",
     calories: "700–900 kcal",
     allergens: "None",
   },
   "Spicy Chicken Meal": {
-    desc: "Hot and seasoned Jamaican chicken with bold island spices.",
+    desc: "Hot seasoned Jamaican chicken with bold spice.",
     calories: "700–950 kcal",
     allergens: "None",
   },
   "Jerk Chicken Meal": {
-    desc: "Authentic jerk chicken grilled with herbs, spice and smoky heat.",
+    desc: "Authentic jerk chicken grilled with island spices.",
     calories: "750–950 kcal",
     allergens: "None",
   },
@@ -26,55 +26,55 @@ const dishInfo = {
     allergens: "None",
   },
   "Curry Chicken": {
-    desc: "Boneless curry chicken, tender and full of island flavour.",
+    desc: "Tender curry chicken with Jamaican seasoning.",
     calories: "500–700 kcal",
     allergens: "None",
   },
 
   "Brown Stew Liver": {
-    desc: "Tender liver slow-cooked in rich Jamaican brown stew gravy.",
+    desc: "Soft liver cooked in rich brown stew gravy.",
     calories: "450–650 kcal",
     allergens: "None",
   },
   "Brown Stew Liver & Rice": {
-    desc: "Classic liver stew served with rice for a full hearty meal.",
+    desc: "Hearty liver stew served with rice.",
     calories: "600–800 kcal",
     allergens: "None",
   },
 
   "Fry Fish Meal": {
-    desc: "Whole fish fried crispy and served with rice and sides.",
+    desc: "Whole fried fish served with rice and sides.",
     calories: "700–900 kcal",
     allergens: "Fish",
   },
   "Fry Fish": {
-    desc: "Fresh whole fish fried golden with Jamaican seasoning.",
+    desc: "Golden fried whole fish Jamaican-style.",
     calories: "450–650 kcal",
     allergens: "Fish",
   },
   "Jamaican Rundown Meal": {
-    desc: "Fish simmered in coconut milk with herbs and spices.",
+    desc: "Fish cooked in coconut milk with herbs.",
     calories: "650–850 kcal",
     allergens: "Fish, Coconut",
   },
   "Jamaican Rundown": {
-    desc: "Traditional coconut fish stew with rich island flavour.",
+    desc: "Traditional coconut fish stew.",
     calories: "500–700 kcal",
     allergens: "Fish, Coconut",
   },
   "Fish Fritters (3 Pieces)": {
-    desc: "Crispy fried seasoned fish bites, light snack style.",
+    desc: "Crispy seasoned fish bites.",
     calories: "300–450 kcal",
     allergens: "Fish, Gluten",
   },
 
   "Mama's Caribbean Healthy Sorrel Drink": {
-    desc: "Traditional hibiscus drink, lightly spiced and refreshing.",
+    desc: "Refreshing hibiscus Caribbean drink.",
     calories: "120–180 kcal",
     allergens: "None",
   },
   "Peanut Punch": {
-    desc: "Creamy Jamaican peanut drink blended with milk and spice.",
+    desc: "Creamy peanut milk drink.",
     calories: "250–400 kcal",
     allergens: "Peanuts, Dairy",
   },
@@ -84,6 +84,10 @@ export default function Ordering() {
   const [table, setTable] = useState("");
   const [cart, setCart] = useState([]);
 
+  const [orderType, setOrderType] = useState("Eat In");
+  const [pickupArea, setPickupArea] = useState("");
+  const [landmark, setLandmark] = useState("");
+
   const [selectedDish, setSelectedDish] = useState(null);
 
   const [wingQty, setWingQty] = useState(1);
@@ -91,10 +95,6 @@ export default function Ordering() {
 
   const [chickenQty, setChickenQty] = useState(1);
   const [chickenFlavor, setChickenFlavor] = useState("BBQ");
-
-  const [orderType, setOrderType] = useState("Eat In");
-  const [pickupArea, setPickupArea] = useState("");
-  const [landmark, setLandmark] = useState("");
 
   const addToCart = (item) => setCart([...cart, item]);
 
@@ -104,7 +104,7 @@ export default function Ordering() {
     setCart(copy);
   };
 
-  const totalPrice = cart.reduce((sum, item) => sum + item.price, 0);
+  const totalPrice = cart.reduce((sum, i) => sum + i.price, 0);
 
   const addWings = () => {
     addToCart({
@@ -125,15 +125,15 @@ export default function Ordering() {
   };
 
   const addQuantityItem = (name, qty, unitPrice) => {
-    if (qty <= 0) return;
+    if (!qty) return;
 
     addToCart({
       name: `${qty} ${name}`,
       quantity: qty,
       price: qty * unitPrice,
       category: [
-        "Mama's Caribbean Healthy Sorrel Drink",
         "Peanut Punch",
+        "Mama's Caribbean Healthy Sorrel Drink",
       ].includes(name)
         ? "drink"
         : "food",
@@ -142,39 +142,44 @@ export default function Ordering() {
 
   const placeOrder = async () => {
     if (!table || cart.length === 0) {
-      alert("Please enter table number and select items.");
+      alert("Add table and items");
       return;
     }
 
     if (orderType === "Takeaway" && !pickupArea) {
-      alert("Please select pickup area for takeaway orders.");
+      alert("Select pickup area");
       return;
     }
 
     const confirmOrder = window.confirm(
-      `ORDER CONFIRMATION\n\nTable: ${table}\nType: ${orderType}\n\n` +
+      `CONFIRM ORDER\n\nTable: ${table}\nType: ${orderType}\n\n` +
         cart.map((i) => `${i.name} - ${i.price}`).join("\n") +
         `\n\nTOTAL: ${totalPrice}`
     );
 
     if (!confirmOrder) return;
 
-    const kitchenItems = cart.filter((i) => i.category === "food");
-    const drinkItems = cart.filter((i) => i.category === "drink");
+    const kitchen = cart.filter((i) => i.category === "food");
+    const drinks = cart.filter((i) => i.category === "drink");
 
-    await supabase.from("orders").insert([
+    const { error } = await supabase.from("orders").insert([
       {
         table_number: table,
         order_type: orderType,
         pickup_area: orderType === "Takeaway" ? pickupArea : null,
         landmark: orderType === "Takeaway" ? landmark : null,
-        items: kitchenItems,
-        drinks: drinkItems,
+        items: kitchen,
+        drinks,
         total_price: totalPrice,
         status: "new",
         created_at: new Date().toISOString(),
       },
     ]);
+
+    if (error) {
+      alert("Error placing order");
+      return;
+    }
 
     setCart([]);
     setTable("");
@@ -242,19 +247,19 @@ export default function Ordering() {
 
       <button onClick={placeOrder}>PLACE ORDER</button>
 
-      {/* BOT POPUP (MOBILE SAFE SMALL) */}
+      {/* BOT POPUP */}
       {selectedDish && (
         <div
           style={{
             position: "fixed",
             bottom: 10,
             right: 10,
-            width: 230,
+            width: 210,
             background: "#111",
             color: "#fff",
             padding: 10,
             borderRadius: 8,
-            fontSize: 12,
+            fontSize: 11,
             zIndex: 9999,
           }}
         >
