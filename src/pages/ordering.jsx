@@ -1,308 +1,257 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 
-/* =========================
-   MAMA FOOD BOT DATA
-========================= */
-const dishInfo = {
-  "BBQ Chicken Meal": {
-    desc: "Smoky BBQ chicken served with rice and sides.",
-    calories: "700–900 kcal",
-    allergens: "None",
-  },
-  "Spicy Chicken Meal": {
-    desc: "Hot seasoned Jamaican chicken with bold spice.",
-    calories: "700–950 kcal",
-    allergens: "None",
-  },
-  "Jerk Chicken Meal": {
-    desc: "Authentic jerk chicken grilled with island spices.",
-    calories: "750–950 kcal",
-    allergens: "None",
-  },
-  "Curry Chicken Meal": {
-    desc: "Slow-cooked chicken in rich Caribbean curry sauce.",
-    calories: "650–850 kcal",
-    allergens: "None",
-  },
-  "Curry Chicken": {
-    desc: "Tender curry chicken with Jamaican seasoning.",
-    calories: "500–700 kcal",
-    allergens: "None",
-  },
-
-  "Brown Stew Liver": {
-    desc: "Soft liver cooked in rich brown stew gravy.",
-    calories: "450–650 kcal",
-    allergens: "None",
-  },
-  "Brown Stew Liver & Rice": {
-    desc: "Hearty liver stew served with rice.",
-    calories: "600–800 kcal",
-    allergens: "None",
-  },
-
-  "Fry Fish Meal": {
-    desc: "Whole fried fish served with rice and sides.",
-    calories: "700–900 kcal",
-    allergens: "Fish",
-  },
-  "Fry Fish": {
-    desc: "Golden fried whole fish Jamaican-style.",
-    calories: "450–650 kcal",
-    allergens: "Fish",
-  },
-  "Jamaican Rundown Meal": {
-    desc: "Fish cooked in coconut milk with herbs.",
-    calories: "650–850 kcal",
-    allergens: "Fish, Coconut",
-  },
-  "Jamaican Rundown": {
-    desc: "Traditional coconut fish stew.",
-    calories: "500–700 kcal",
-    allergens: "Fish, Coconut",
-  },
-  "Fish Fritters (3 Pieces)": {
-    desc: "Crispy seasoned fish bites.",
-    calories: "300–450 kcal",
-    allergens: "Fish, Gluten",
-  },
-
-  "Mama's Caribbean Healthy Sorrel Drink": {
-    desc: "Refreshing hibiscus Caribbean drink.",
-    calories: "120–180 kcal",
-    allergens: "None",
-  },
-  "Peanut Punch": {
-    desc: "Creamy peanut milk drink.",
-    calories: "250–400 kcal",
-    allergens: "Peanuts, Dairy",
-  },
-};
-
 export default function Ordering() {
-  const [table, setTable] = useState("");
-  const [cart, setCart] = useState([]);
+  const [table, setTable] = useState("");
+  const [cart, setCart] = useState([]);
 
-  const [orderType, setOrderType] = useState("Eat In");
-  const [pickupArea, setPickupArea] = useState("");
-  const [landmark, setLandmark] = useState("");
+  // Wings
+  const [wingQty, setWingQty] = useState(1);
+  const [wingFlavor, setWingFlavor] = useState("BBQ");
 
-  const [selectedDish, setSelectedDish] = useState(null);
+  // Chicken Only
+  const [chickenQty, setChickenQty] = useState(1);
+  const [chickenFlavor, setChickenFlavor] = useState("BBQ");
 
-  const [wingQty, setWingQty] = useState(1);
-  const [wingFlavor, setWingFlavor] = useState("BBQ");
+  // Order type
+  const [orderType, setOrderType] = useState("Eat In");
+  const [pickupArea, setPickupArea] = useState("");
+  const [landmark, setLandmark] = useState("");
 
-  const [chickenQty, setChickenQty] = useState(1);
-  const [chickenFlavor, setChickenFlavor] = useState("BBQ");
+  // Helpers
+  const addToCart = (item) => {
+    setCart([...cart, item]);
+  };
 
-  const addToCart = (item) => setCart([...cart, item]);
+  const removeFromCart = (index) => {
+    const updated = [...cart];
+    updated.splice(index, 1);
+    setCart(updated);
+  };
 
-  const removeFromCart = (index) => {
-    const copy = [...cart];
-    copy.splice(index, 1);
-    setCart(copy);
-  };
+  const totalPrice = cart.reduce((sum, item) => sum + item.price, 0);
 
-  const totalPrice = cart.reduce((sum, i) => sum + i.price, 0);
+  // Add Wings
+  const addWings = () => {
+    addToCart({
+      name: `${wingQty} Wing${wingQty > 1 ? "s" : ""} - ${wingFlavor}`,
+      price: wingQty * 50,
+      quantity: wingQty,
+      category: "food",
+    });
+  };
 
-  const addWings = () => {
-    addToCart({
-      name: `${wingQty} Wing${wingQty > 1 ? "s" : ""} - ${wingFlavor}`,
-      price: wingQty * 50,
-      quantity: wingQty,
-      category: "food",
-    });
-  };
+  // Add Chicken Only
+  const addChicken = () => {
+    addToCart({
+      name: `${chickenQty} Chicken Piece${chickenQty > 1 ? "s" : ""} - ${chickenFlavor}`,
+      price: chickenQty * 160,
+      quantity: chickenQty,
+      category: "food",
+    });
+  };
 
-  const addChicken = () => {
-    addToCart({
-      name: `${chickenQty} Chicken Piece${chickenQty > 1 ? "s" : ""} - ${chickenFlavor}`,
-      price: chickenQty * 160,
-      quantity: chickenQty,
-      category: "food",
-    });
-  };
+  // Add Quantity Items
+  const addQuantityItem = (name, qty, unitPrice) => {
+    if (qty <= 0) return;
 
-  const addQuantityItem = (name, qty, unitPrice) => {
-    if (!qty) return;
+    addToCart({
+      name: `${qty} ${name}`,
+      quantity: qty,
+      price: qty * unitPrice,
+      category: [
+        "Mama's Caribbean Healthy Sorrel Drink",
+        "Peanut Punch",
+      ].includes(name)
+        ? "drink"
+        : "food",
+    });
+  };
 
-    addToCart({
-      name: `${qty} ${name}`,
-      quantity: qty,
-      price: qty * unitPrice,
-      category: [
-        "Peanut Punch",
-        "Mama's Caribbean Healthy Sorrel Drink",
-      ].includes(name)
-        ? "drink"
-        : "food",
-    });
-  };
+  // Submit Order
+  const placeOrder = async () => {
+    if (!table || cart.length === 0) {
+      alert("Please enter table number and select items.");
+      return;
+    }
 
-  const placeOrder = async () => {
-    if (!table || cart.length === 0) {
-      alert("Add table and items");
-      return;
-    }
+    if (orderType === "Takeaway" && !pickupArea) {
+      alert("Please select pickup area for takeaway orders.");
+      return;
+    }
 
-    if (orderType === "Takeaway" && !pickupArea) {
-      alert("Select pickup area");
-      return;
-    }
+    const confirmOrder = window.confirm(
+      `PLEASE CONFIRM YOUR ORDER\n\nTable: ${table}\nOrder Type: ${orderType}${
+        orderType === "Takeaway"
+          ? `\nPickup Area: ${pickupArea}\nLandmark: ${landmark}`
+          : ""
+      }\n\n${cart
+        .map((item) => `${item.name} - ${item.price} EGP`)
+        .join("\n")}\n\nTOTAL: ${totalPrice} EGP`
+    );
 
-    const confirmOrder = window.confirm(
-      `CONFIRM ORDER\n\nTable: ${table}\nType: ${orderType}\n\n` +
-        cart.map((i) => `${i.name} - ${i.price}`).join("\n") +
-        `\n\nTOTAL: ${totalPrice}`
-    );
+    if (!confirmOrder) return;
 
-    if (!confirmOrder) return;
+    const kitchenItems = cart.filter((item) => item.category === "food");
+    const drinkItems = cart.filter((item) => item.category === "drink");
 
-    const kitchen = cart.filter((i) => i.category === "food");
-    const drinks = cart.filter((i) => i.category === "drink");
+    try {
+      const { error } = await supabase.from("orders").insert([
+        {
+          table_number: table,
+          order_type: orderType,
+          pickup_area: orderType === "Takeaway" ? pickupArea : null,
+          landmark: orderType === "Takeaway" ? landmark : null,
+          items: kitchenItems,
+          drinks: drinkItems,
+          total_price: totalPrice,
+          status: "new",
+          created_at: new Date().toISOString(),
+        },
+      ]);
 
-    const { error } = await supabase.from("orders").insert([
-      {
-        table_number: table,
-        order_type: orderType,
-        pickup_area: orderType === "Takeaway" ? pickupArea : null,
-        landmark: orderType === "Takeaway" ? landmark : null,
-        items: kitchen,
-        drinks,
-        total_price: totalPrice,
-        status: "new",
-        created_at: new Date().toISOString(),
-      },
-    ]);
+      if (error) {
+        console.error("Supabase Insert Error:", error);
+        alert("Error placing order.");
+        return;
+      }
 
-    if (error) {
-      alert("Error placing order");
-      return;
-    }
+      alert("Thank you for placing your order!");
 
-    setCart([]);
-    setTable("");
-    setPickupArea("");
-    setLandmark("");
-    setOrderType("Eat In");
-  };
+      setCart([]);
+      setTable("");
+      setPickupArea("");
+      setLandmark("");
+      setOrderType("Eat In");
+    } catch (err) {
+      console.error("Unexpected Error:", err);
+      alert("Error placing order.");
+    }
+  };
 
-  return (
-    <div style={{ padding: 20, maxWidth: 700, margin: "auto" }}>
-      <h1>Mama's Jamaican Kitchen</h1>
+  return (
+    <div style={{ padding: 20, maxWidth: 700, margin: "0 auto" }}>
+      <h1>Mama's Jamaican Kitchen</h1>
 
-      {/* TABLE */}
-      <input
-        placeholder="Table Number"
-        value={table}
-        onChange={(e) => setTable(e.target.value)}
-        style={{ padding: 10, marginBottom: 15 }}
-      />
+      {/* Table */}
+      <div style={{ marginBottom: 20 }}>
+        <input
+          type="text"
+          placeholder="Enter Table Number"
+          value={table}
+          onChange={(e) => setTable(e.target.value)}
+          style={{ width: "220px", padding: 12, fontSize: 16 }}
+        />
+      </div>
 
-      {/* ORDER TYPE */}
-      <div>
-        <h3>Order Type</h3>
+      {/* Order Type */}
+      <div style={{ marginBottom: 20 }}>
+        <h2>Order Type</h2>
 
-        <select value={orderType} onChange={(e) => setOrderType(e.target.value)}>
-          <option>Eat In</option>
-          <option>Takeaway</option>
-        </select>
+        <select value={orderType} onChange={(e) => setOrderType(e.target.value)}>
+          <option>Eat In</option>
+          <option>Takeaway</option>
+        </select>
 
-        {orderType === "Takeaway" && (
-          <div>
-            <select value={pickupArea} onChange={(e) => setPickupArea(e.target.value)}>
-              <option value="">Select Pickup Area</option>
-              <option>Asala</option>
-              <option>Mashraba</option>
-              <option>Lighthouse</option>
-              <option>Eel Garden</option>
-              <option>Medina</option>
-              <option>Laguna</option>
-              <option>Other</option>
-            </select>
+        {orderType === "Takeaway" && (
+          <div style={{ marginTop: 10 }}>
+            <select
+              value={pickupArea}
+              onChange={(e) => setPickupArea(e.target.value)}
+            >
+              <option value="">Select Pickup Area</option>
+              <option>Asala</option>
+              <option>Mashraba</option>
+              <option>Lighthouse</option>
+              <option>Eel Garden</option>
+              <option>Medina</option>
+              <option>Mubarak</option>
+              <option>Ard El Gameeya</option>
+              <option>Laguna</option>
+              <option>Other</option>
+            </select>
 
-            <input
-              placeholder="Landmark"
-              value={landmark}
-              onChange={(e) => setLandmark(e.target.value)}
-            />
-          </div>
-        )}
-      </div>
+            <input
+              type="text"
+              placeholder="Nearby Landmark / Hotel / Shop"
+              value={landmark}
+              onChange={(e) => setLandmark(e.target.value)}
+              style={{ display: "block", marginTop: 10, width: "100%", padding: 8 }}
+            />
+          </div>
+        )}
+      </div>
 
-      {/* CART */}
-      <div>
-        <h3>Cart</h3>
+      {/* Wings */}
+      <div style={{ marginBottom: 30 }}>
+        <h2>Chicken Wings</h2>
 
-        {cart.map((i, idx) => (
-          <div key={idx}>
-            {i.name} - {i.price}
-            <button onClick={() => removeFromCart(idx)}>X</button>
-          </div>
-        ))}
+        <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
+          <select value={wingQty} onChange={(e) => setWingQty(Number(e.target.value))}>
+            {[1, 2, 3, 4, 5, 6].map((num) => (
+              <option key={num} value={num}>
+                {num} Wing{num > 1 ? "s" : ""}
+              </option>
+            ))}
+          </select>
 
-        <h3>Total: {totalPrice}</h3>
-      </div>
+          <select value={wingFlavor} onChange={(e) => setWingFlavor(e.target.value)}>
+            <option>BBQ</option>
+            <option>Spicy</option>
+            <option>Jerk</option>
+          </select>
 
-      <button onClick={placeOrder}>PLACE ORDER</button>
+          <button onClick={addWings}>Add Wings</button>
+        </div>
+      </div>
 
-      {/* BOT POPUP */}
-      {selectedDish && (
-        <div
-          style={{
-            position: "fixed",
-            bottom: 10,
-            right: 10,
-            width: 210,
-            background: "#111",
-            color: "#fff",
-            padding: 10,
-            borderRadius: 8,
-            fontSize: 11,
-            zIndex: 9999,
-          }}
-        >
-          <strong>{selectedDish}</strong>
+      {/* Chicken Only */}
+      <div style={{ marginBottom: 30 }}>
+        <h2>Chicken Only</h2>
 
-          <p>{dishInfo[selectedDish]?.desc}</p>
-          <p>🔥 {dishInfo[selectedDish]?.calories}</p>
-          <p>⚠️ {dishInfo[selectedDish]?.allergens}</p>
+        <div style={{ display: "flex", gap: 10 }}>
+          <select value={chickenQty} onChange={(e) => setChickenQty(Number(e.target.value))}>
+            {[1, 2, 3, 4, 5, 6].map((num) => (
+              <option key={num} value={num}>
+                {num} Piece{num > 1 ? "s" : ""}
+              </option>
+            ))}
+          </select>
 
-          <button onClick={() => setSelectedDish(null)}>
-            Close
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
+          <select value={chickenFlavor} onChange={(e) => setChickenFlavor(e.target.value)}>
+            <option>BBQ</option>
+            <option>Spicy</option>
+            <option>Jerk</option>
+          </select>
 
-/* =========================
-   QUANTITY SELECTOR
-========================= */
-function QuantitySelector({
-  title,
-  unitPrice,
-  addQuantityItem,
-}) {
-  const [qty, setQty] = useState(1);
+          <button onClick={addChicken}>Add Chicken</button>
+        </div>
+      </div>
 
-  return (
-    <div style={{ marginBottom: 15 }}>
-      <h4>{title} - {unitPrice}</h4>
+      {/* Chicken Meals */}
+      <div style={{ marginBottom: 30 }}>
+        <h2>Chicken Meals</h2>
 
-      <button onClick={() => setQty(Math.max(1, qty - 1))}>-</button>
-      <span style={{ margin: 10 }}>{qty}</span>
-      <button onClick={() => setQty(qty + 1)}>+</button>
+        <QuantitySelector title="BBQ Chicken Meal" unitPrice={320} addQuantityItem={addQuantityItem} />
+        <QuantitySelector title="Spicy Chicken Meal" unitPrice={320} addQuantityItem={addQuantityItem} />
+        <QuantitySelector title="Jerk Chicken Meal" unitPrice={320} addQuantityItem={addQuantityItem} />
 
-      <button onClick={() => addQuantityItem(title, qty, unitPrice)}>
-        Add
-      </button>
+        <QuantitySelector title="Curry Chicken Meal" unitPrice={350} addQuantityItem={addQuantityItem} />
+        <QuantitySelector title="Curry Chicken" unitPrice={250} addQuantityItem={addQuantityItem} />
+      </div>
 
-      <button onClick={() => setSelectedDish(title)}>
-        What's this?
-      </button>
-    </div>
-  );
-}
+      {/* Liver */}
+      <div style={{ marginBottom: 30 }}>
+        <h2>Liver Dishes</h2>
+
+        <QuantitySelector title="Brown Stew Liver" unitPrice={230} addQuantityItem={addQuantityItem} />
+        <QuantitySelector title="Brown Stew Liver & Rice" unitPrice={300} addQuantityItem={addQuantityItem} />
+      </div>
+
+      {/* Fish Dishes */}
+      <div style={{ marginBottom: 30 }}>
+        <h2>Fish Dishes</h2>
+
+        <QuantitySelector title="Fry Fish Meal" unitPrice={350} addQuantityItem={addQuantityItem} />
+        <QuantitySelector title="Fry Fish" unitPrice={140} addQuantityItem={addQuantityItem} />
+        <QuantitySelector title="Jamaican Rundown Meal" unitPrice={350} addQuantity
