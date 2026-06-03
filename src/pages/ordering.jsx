@@ -59,7 +59,10 @@ export default function Ordering() {
       name: `${qty} ${name}`,
       quantity: qty,
       price: qty * unitPrice,
-      category: ["Mama's Caribbean Healthy Sorrel Drink"].includes(name)
+      category: [
+        "Mama's Caribbean Healthy Sorrel Drink",
+        "Peanut Punch",
+      ].includes(name)
         ? "drink"
         : "food",
     });
@@ -89,27 +92,18 @@ export default function Ordering() {
 
     if (!confirmOrder) return;
 
-    const kitchenItems = cart.filter(
-      (item) => item.category === "food"
-    );
-
-    const drinkItems = cart.filter(
-      (item) => item.category === "drink"
-    );
+    const kitchenItems = cart.filter((item) => item.category === "food");
+    const drinkItems = cart.filter((item) => item.category === "drink");
 
     try {
       const { error } = await supabase.from("orders").insert([
         {
           table_number: table,
           order_type: orderType,
-          pickup_area:
-            orderType === "Takeaway" ? pickupArea : null,
-          landmark:
-            orderType === "Takeaway" ? landmark : null,
-
+          pickup_area: orderType === "Takeaway" ? pickupArea : null,
+          landmark: orderType === "Takeaway" ? landmark : null,
           items: kitchenItems,
           drinks: drinkItems,
-
           total_price: totalPrice,
           status: "new",
           created_at: new Date().toISOString(),
@@ -146,11 +140,7 @@ export default function Ordering() {
           placeholder="Enter Table Number"
           value={table}
           onChange={(e) => setTable(e.target.value)}
-          style={{
-            width: "220px",
-            padding: 12,
-            fontSize: 16,
-          }}
+          style={{ width: "220px", padding: 12, fontSize: 16 }}
         />
       </div>
 
@@ -158,10 +148,7 @@ export default function Ordering() {
       <div style={{ marginBottom: 20 }}>
         <h2>Order Type</h2>
 
-        <select
-          value={orderType}
-          onChange={(e) => setOrderType(e.target.value)}
-        >
+        <select value={orderType} onChange={(e) => setOrderType(e.target.value)}>
           <option>Eat In</option>
           <option>Takeaway</option>
         </select>
@@ -189,12 +176,7 @@ export default function Ordering() {
               placeholder="Nearby Landmark / Hotel / Shop"
               value={landmark}
               onChange={(e) => setLandmark(e.target.value)}
-              style={{
-                display: "block",
-                marginTop: 10,
-                width: "100%",
-                padding: 8,
-              }}
+              style={{ display: "block", marginTop: 10, width: "100%", padding: 8 }}
             />
           </div>
         )}
@@ -204,19 +186,8 @@ export default function Ordering() {
       <div style={{ marginBottom: 30 }}>
         <h2>Chicken Wings</h2>
 
-        <div
-          style={{
-            display: "flex",
-            gap: 10,
-            marginBottom: 10,
-          }}
-        >
-          <select
-            value={wingQty}
-            onChange={(e) =>
-              setWingQty(Number(e.target.value))
-            }
-          >
+        <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
+          <select value={wingQty} onChange={(e) => setWingQty(Number(e.target.value))}>
             {[1, 2, 3, 4, 5, 6].map((num) => (
               <option key={num} value={num}>
                 {num} Wing{num > 1 ? "s" : ""}
@@ -224,20 +195,13 @@ export default function Ordering() {
             ))}
           </select>
 
-          <select
-            value={wingFlavor}
-            onChange={(e) =>
-              setWingFlavor(e.target.value)
-            }
-          >
+          <select value={wingFlavor} onChange={(e) => setWingFlavor(e.target.value)}>
             <option>BBQ</option>
             <option>Spicy</option>
             <option>Jerk</option>
           </select>
 
-          <button onClick={addWings}>
-            Add Wings
-          </button>
+          <button onClick={addWings}>Add Wings</button>
         </div>
       </div>
 
@@ -246,12 +210,7 @@ export default function Ordering() {
         <h2>Chicken Only</h2>
 
         <div style={{ display: "flex", gap: 10 }}>
-          <select
-            value={chickenQty}
-            onChange={(e) =>
-              setChickenQty(Number(e.target.value))
-            }
-          >
+          <select value={chickenQty} onChange={(e) => setChickenQty(Number(e.target.value))}>
             {[1, 2, 3, 4, 5, 6].map((num) => (
               <option key={num} value={num}>
                 {num} Piece{num > 1 ? "s" : ""}
@@ -259,20 +218,13 @@ export default function Ordering() {
             ))}
           </select>
 
-          <select
-            value={chickenFlavor}
-            onChange={(e) =>
-              setChickenFlavor(e.target.value)
-            }
-          >
+          <select value={chickenFlavor} onChange={(e) => setChickenFlavor(e.target.value)}>
             <option>BBQ</option>
             <option>Spicy</option>
             <option>Jerk</option>
           </select>
 
-          <button onClick={addChicken}>
-            Add Chicken
-          </button>
+          <button onClick={addChicken}>Add Chicken</button>
         </div>
       </div>
 
@@ -280,133 +232,70 @@ export default function Ordering() {
       <div style={{ marginBottom: 30 }}>
         <h2>Chicken Meals</h2>
 
-        <QuantitySelector
-          title="BBQ Chicken Meal"
-          unitPrice={320}
-          addQuantityItem={addQuantityItem}
-        />
+        <QuantitySelector title="BBQ Chicken Meal" unitPrice={320} addQuantityItem={addQuantityItem} />
+        <QuantitySelector title="Spicy Chicken Meal" unitPrice={320} addQuantityItem={addQuantityItem} />
+        <QuantitySelector title="Jerk Chicken Meal" unitPrice={320} addQuantityItem={addQuantityItem} />
 
-        <QuantitySelector
-          title="Spicy Chicken Meal"
-          unitPrice={320}
-          addQuantityItem={addQuantityItem}
-        />
-
-        <QuantitySelector
-          title="Jerk Chicken Meal"
-          unitPrice={320}
-          addQuantityItem={addQuantityItem}
-        />
+        <QuantitySelector title="Curry Chicken Meal" unitPrice={350} addQuantityItem={addQuantityItem} />
+        <QuantitySelector title="Curry Chicken" unitPrice={250} addQuantityItem={addQuantityItem} />
       </div>
 
       {/* Liver */}
       <div style={{ marginBottom: 30 }}>
         <h2>Liver Dishes</h2>
 
-        <QuantitySelector
-          title="Brown Stew Liver"
-          unitPrice={230}
-          addQuantityItem={addQuantityItem}
-        />
+        <QuantitySelector title="Brown Stew Liver" unitPrice={230} addQuantityItem={addQuantityItem} />
+        <QuantitySelector title="Brown Stew Liver & Rice" unitPrice={300} addQuantityItem={addQuantityItem} />
+      </div>
 
-        <QuantitySelector
-          title="Brown Stew Liver & Rice"
-          unitPrice={300}
-          addQuantityItem={addQuantityItem}
-        />
+      {/* Fish Dishes */}
+      <div style={{ marginBottom: 30 }}>
+        <h2>Fish Dishes</h2>
+
+        <QuantitySelector title="Fry Fish Meal" unitPrice={350} addQuantityItem={addQuantityItem} />
+        <QuantitySelector title="Fry Fish" unitPrice={140} addQuantityItem={addQuantityItem} />
+        <QuantitySelector title="Jamaican Rundown Meal" unitPrice={350} addQuantityItem={addQuantityItem} />
+        <QuantitySelector title="Jamaican Rundown" unitPrice={250} addQuantityItem={addQuantityItem} />
+        <QuantitySelector title="Fish Fritters (3 Pieces)" unitPrice={100} addQuantityItem={addQuantityItem} />
       </div>
 
       {/* Sides */}
       <div style={{ marginBottom: 30 }}>
         <h2>Sides</h2>
 
-        <QuantitySelector
-          title="Rice"
-          unitPrice={100}
-          addQuantityItem={addQuantityItem}
-        />
-
-        <QuantitySelector
-          title="Rice & Peas"
-          unitPrice={120}
-          addQuantityItem={addQuantityItem}
-        />
-
-        <QuantitySelector
-          title="Fries"
-          unitPrice={80}
-          addQuantityItem={addQuantityItem}
-        />
-
-        <QuantitySelector
-          title="Dumplin"
-          unitPrice={110}
-          addQuantityItem={addQuantityItem}
-        />
-
-        <QuantitySelector
-          title="Festival"
-          unitPrice={130}
-          addQuantityItem={addQuantityItem}
-        />
+        <QuantitySelector title="Rice" unitPrice={100} addQuantityItem={addQuantityItem} />
+        <QuantitySelector title="Rice & Peas" unitPrice={120} addQuantityItem={addQuantityItem} />
+        <QuantitySelector title="Fries" unitPrice={80} addQuantityItem={addQuantityItem} />
+        <QuantitySelector title="Dumplin" unitPrice={110} addQuantityItem={addQuantityItem} />
+        <QuantitySelector title="Festival" unitPrice={130} addQuantityItem={addQuantityItem} />
       </div>
 
       {/* Drinks */}
       <div style={{ marginBottom: 30 }}>
         <h2>Drinks</h2>
 
-        <QuantitySelector
-          title="Mama's Caribbean Healthy Sorrel Drink"
-          unitPrice={150}
-          addQuantityItem={addQuantityItem}
-        />
+        <QuantitySelector title="Mama's Caribbean Healthy Sorrel Drink" unitPrice={150} addQuantityItem={addQuantityItem} />
+        <QuantitySelector title="Peanut Punch" unitPrice={150} addQuantityItem={addQuantityItem} />
       </div>
 
       {/* Desserts */}
       <div style={{ marginBottom: 30 }}>
         <h2>Desserts</h2>
 
-        <QuantitySelector
-          title="Spiced Bun Slice"
-          unitPrice={25}
-          addQuantityItem={addQuantityItem}
-        />
-
-        <QuantitySelector
-          title="Caribbean Toto Coconut Cake Slice"
-          unitPrice={45}
-          addQuantityItem={addQuantityItem}
-        />
+        <QuantitySelector title="Spiced Bun Slice" unitPrice={25} addQuantityItem={addQuantityItem} />
+        <QuantitySelector title="Caribbean Toto Coconut Cake Slice" unitPrice={45} addQuantityItem={addQuantityItem} />
       </div>
 
       {/* Cart */}
       <div style={{ marginBottom: 30 }}>
         <h2>Cart</h2>
 
-        {cart.length === 0 && (
-          <p>No items added.</p>
-        )}
+        {cart.length === 0 && <p>No items added.</p>}
 
         {cart.map((item, index) => (
-          <div
-            key={index}
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              marginBottom: 10,
-              borderBottom: "1px solid #ccc",
-              paddingBottom: 5,
-            }}
-          >
-            <div>
-              {item.name} - {item.price} EGP
-            </div>
-
-            <button
-              onClick={() => removeFromCart(index)}
-            >
-              REMOVE
-            </button>
+          <div key={index} style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+            <div>{item.name} - {item.price} EGP</div>
+            <button onClick={() => removeFromCart(index)}>REMOVE</button>
           </div>
         ))}
 
@@ -416,12 +305,7 @@ export default function Ordering() {
       {/* Submit */}
       <button
         onClick={placeOrder}
-        style={{
-          width: "100%",
-          padding: 15,
-          fontSize: 18,
-          fontWeight: "bold",
-        }}
+        style={{ width: "100%", padding: 15, fontSize: 18, fontWeight: "bold" }}
       >
         PLACE ORDER
       </button>
@@ -430,11 +314,7 @@ export default function Ordering() {
 }
 
 // Quantity Component
-function QuantitySelector({
-  title,
-  unitPrice,
-  addQuantityItem,
-}) {
+function QuantitySelector({ title, unitPrice, addQuantityItem }) {
   const [qty, setQty] = useState(1);
 
   return (
@@ -443,32 +323,12 @@ function QuantitySelector({
         {title} - {unitPrice} EGP each
       </h4>
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-        }}
-      >
-        <button
-          onClick={() =>
-            setQty(Math.max(1, qty - 1))
-          }
-        >
-          -
-        </button>
-
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <button onClick={() => setQty(Math.max(1, qty - 1))}>-</button>
         <span>{qty}</span>
+        <button onClick={() => setQty(qty + 1)}>+</button>
 
-        <button onClick={() => setQty(qty + 1)}>
-          +
-        </button>
-
-        <button
-          onClick={() =>
-            addQuantityItem(title, qty, unitPrice)
-          }
-        >
+        <button onClick={() => addQuantityItem(title, qty, unitPrice)}>
           Add
         </button>
       </div>
