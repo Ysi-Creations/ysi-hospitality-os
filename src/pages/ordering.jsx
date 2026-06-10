@@ -18,11 +18,11 @@ export default function Ordering() {
   const [pickupArea, setPickupArea] = useState("");
   const [landmark, setLandmark] = useState("");
 
-  // Mobile Number for Takeaway
+  // NEW: Mobile Number for Takeaway
   const [mobileNumber, setMobileNumber] = useState("");
   const [showMobileModal, setShowMobileModal] = useState(false);
 
-  // Modal State for Dish Info
+  // NEW: Modal State for Mama's Friendly Jamaican Food BOT
   const [modalItem, setModalItem] = useState(null);
 
   // Dish Information Database (Concise)
@@ -184,6 +184,7 @@ export default function Ordering() {
     });
   };
 
+  // NEW: Open Info Modal
   const openInfo = (title) => {
     setModalItem({
       title,
@@ -191,7 +192,7 @@ export default function Ordering() {
     });
   };
 
-  // Mobile Number Modal Handlers
+  // NEW: Mobile Number Modal Handlers
   const openMobileModal = () => {
     setShowMobileModal(true);
   };
@@ -222,14 +223,13 @@ export default function Ordering() {
     }
 
     const confirmOrder = window.confirm(
-      `PLEASE CONFIRM YOUR ORDER\n\n` +
-      `Table: ${orderType === "Eat In" ? table : "N/A"}\n` +
-      `Order Type: ${orderType}\n` +
-      (orderType === "Takeaway" 
-        ? `Pickup Area: ${pickupArea}\nLandmark: ${landmark}\nMobile Number: ${mobileNumber || "Not provided"}\n` 
-        : "") +
-      `\n${cart.map((item) => `${item.name} - ${item.price} EGP`).join("\n")}\n\n` +
-      `TOTAL: ${totalPrice} EGP`
+      `PLEASE CONFIRM YOUR ORDER\n\nTable: ${orderType === "Eat In" ? table : "N/A"}\nOrder Type: ${orderType}${
+        orderType === "Takeaway"
+          ? `\nPickup Area: ${pickupArea}\nLandmark: ${landmark}\nMobile: ${mobileNumber || "Not provided"}`
+          : ""
+      }\n\n${cart
+        .map((item) => `${item.name} - ${item.price} EGP`)
+        .join("\n")}\n\nTOTAL: ${totalPrice} EGP`
     );
 
     if (!confirmOrder) return;
@@ -244,7 +244,6 @@ export default function Ordering() {
           order_type: orderType,
           pickup_area: orderType === "Takeaway" ? pickupArea : null,
           landmark: orderType === "Takeaway" ? landmark : null,
-          mobile_number: orderType === "Takeaway" ? mobileNumber : null,
           items: kitchenItems,
           drinks: drinkItems,
           total_price: totalPrice,
@@ -261,7 +260,6 @@ export default function Ordering() {
 
       alert("Thank you for placing your order!");
 
-      // Reset
       setCart([]);
       setTable("");
       setPickupArea("");
@@ -278,7 +276,7 @@ export default function Ordering() {
     <div style={{ padding: 20, maxWidth: 700, margin: "0 auto" }}>
       <h1>Mama's Jamaican Kitchen</h1>
 
-      {/* Table */}
+      {/* Table - kept always visible per rules (only validation changed) */}
       <div style={{ marginBottom: 20 }}>
         <input
           type="text"
@@ -324,7 +322,7 @@ export default function Ordering() {
               style={{ display: "block", marginTop: 10, width: "100%", padding: 8 }}
             />
 
-            {/* Mobile Number - Always visible when set for takeaway */}
+            {/* Mobile Number Section under pickup area - always visible when saved */}
             <div style={{ marginTop: 12 }}>
               <button
                 onClick={openMobileModal}
@@ -336,23 +334,22 @@ export default function Ordering() {
                   borderRadius: "6px",
                   fontSize: "14px",
                   cursor: "pointer",
-                  marginBottom: 8
+                  marginBottom: mobileNumber ? 8 : 0
                 }}
               >
                 {mobileNumber ? "Change Mobile Number" : "Add Mobile Number"}
               </button>
-              
               {mobileNumber && (
                 <div style={{ 
-                  padding: "10px 14px", 
+                  padding: "8px 12px", 
                   backgroundColor: "#f0f9f0", 
-                  border: "1px solid #27ae60",
                   borderRadius: "6px", 
-                  fontSize: "15px",
-                  color: "#1e8449",
-                  fontWeight: "600"
+                  fontSize: "14px",
+                  color: "#27ae60",
+                  fontWeight: "500",
+                  border: "1px solid #d4edda"
                 }}>
-                  📱 Mobile Number: <strong>{mobileNumber}</strong>
+                  Mobile: {mobileNumber}
                 </div>
               )}
             </div>
@@ -360,7 +357,6 @@ export default function Ordering() {
         )}
       </div>
 
-      {/* Wings, Chicken Only, Meals, etc. ... (unchanged) */}
       {/* Wings */}
       <div style={{ marginBottom: 30 }}>
         <h2>Chicken Wings</h2>
@@ -584,20 +580,6 @@ export default function Ordering() {
         ))}
 
         <h2>Total: {totalPrice} EGP</h2>
-
-        {/* Mobile number also visible in cart area for takeaway orders */}
-        {orderType === "Takeaway" && mobileNumber && (
-          <div style={{ 
-            marginTop: 15, 
-            padding: "10px", 
-            backgroundColor: "#f0f9f0", 
-            borderRadius: "6px",
-            border: "1px solid #27ae60",
-            fontSize: "15px"
-          }}>
-            <strong>Customer Mobile:</strong> {mobileNumber}
-          </div>
-        )}
       </div>
 
       {/* Submit */}
@@ -608,7 +590,7 @@ export default function Ordering() {
         PLACE ORDER
       </button>
 
-      {/* Mobile Number Modal */}
+      {/* ====================== MOBILE NUMBER MODAL ====================== */}
       {showMobileModal && (
         <div style={{
           position: "fixed",
@@ -687,7 +669,7 @@ export default function Ordering() {
         </div>
       )}
 
-      {/* Dish Info Modal */}
+      {/* ====================== MAMA'S FRIENDLY BOT MODAL ====================== */}
       {modalItem && (
         <div style={{
           position: "fixed",
@@ -739,7 +721,7 @@ export default function Ordering() {
   );
 }
 
-// QuantitySelector Component
+// Updated Quantity Component
 function QuantitySelector({ title, unitPrice, addQuantityItem, onInfoClick }) {
   const [qty, setQty] = useState(1);
 
