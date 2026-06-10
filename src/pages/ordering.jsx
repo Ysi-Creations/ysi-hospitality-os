@@ -18,11 +18,11 @@ export default function Ordering() {
   const [pickupArea, setPickupArea] = useState("");
   const [landmark, setLandmark] = useState("");
 
-  // NEW: Mobile Number for Takeaway
+  // Mobile Number for Takeaway
   const [mobileNumber, setMobileNumber] = useState("");
   const [showMobileModal, setShowMobileModal] = useState(false);
 
-  // NEW: Modal State for Mama's Friendly Jamaican Food BOT
+  // Modal State for Dish Info
   const [modalItem, setModalItem] = useState(null);
 
   // Dish Information Database (Concise)
@@ -184,7 +184,6 @@ export default function Ordering() {
     });
   };
 
-  // NEW: Open Info Modal
   const openInfo = (title) => {
     setModalItem({
       title,
@@ -192,7 +191,7 @@ export default function Ordering() {
     });
   };
 
-  // NEW: Mobile Number Modal Handlers
+  // Mobile Number Modal Handlers
   const openMobileModal = () => {
     setShowMobileModal(true);
   };
@@ -207,8 +206,13 @@ export default function Ordering() {
 
   // Submit Order
   const placeOrder = async () => {
-    if (!table || cart.length === 0) {
-      alert("Please enter table number and select items.");
+    if (cart.length === 0) {
+      alert("Please select items.");
+      return;
+    }
+
+    if (orderType === "Eat In" && !table) {
+      alert("Please enter table number for Eat In orders.");
       return;
     }
 
@@ -218,13 +222,14 @@ export default function Ordering() {
     }
 
     const confirmOrder = window.confirm(
-      `PLEASE CONFIRM YOUR ORDER\n\nTable: ${table}\nOrder Type: ${orderType}${
-        orderType === "Takeaway"
-          ? `\nPickup Area: ${pickupArea}\nLandmark: ${landmark}\nMobile: ${mobileNumber || "Not provided"}`
-          : ""
-      }\n\n${cart
-        .map((item) => `${item.name} - ${item.price} EGP`)
-        .join("\n")}\n\nTOTAL: ${totalPrice} EGP`
+      `PLEASE CONFIRM YOUR ORDER\n\n` +
+      `Table: ${orderType === "Eat In" ? table : "N/A"}\n` +
+      `Order Type: ${orderType}\n` +
+      (orderType === "Takeaway" 
+        ? `Pickup Area: ${pickupArea}\nLandmark: ${landmark}\nMobile Number: ${mobileNumber || "Not provided"}\n` 
+        : "") +
+      `\n${cart.map((item) => `${item.name} - ${item.price} EGP`).join("\n")}\n\n` +
+      `TOTAL: ${totalPrice} EGP`
     );
 
     if (!confirmOrder) return;
@@ -235,7 +240,7 @@ export default function Ordering() {
     try {
       const { error } = await supabase.from("orders").insert([
         {
-          table_number: table,
+          table_number: orderType === "Eat In" ? table : null,
           order_type: orderType,
           pickup_area: orderType === "Takeaway" ? pickupArea : null,
           landmark: orderType === "Takeaway" ? landmark : null,
@@ -255,6 +260,7 @@ export default function Ordering() {
 
       alert("Thank you for placing your order!");
 
+      // Reset
       setCart([]);
       setTable("");
       setPickupArea("");
@@ -317,8 +323,8 @@ export default function Ordering() {
               style={{ display: "block", marginTop: 10, width: "100%", padding: 8 }}
             />
 
-            {/* NEW: Mobile Number Section under pickup area */}
-            <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 8 }}>
+            {/* Mobile Number Section - Always visible when set */}
+            <div style={{ marginTop: 12 }}>
               <button
                 onClick={openMobileModal}
                 style={{
@@ -329,15 +335,24 @@ export default function Ordering() {
                   borderRadius: "6px",
                   fontSize: "14px",
                   cursor: "pointer",
-                  flexShrink: 0
+                  marginBottom: 8
                 }}
               >
-                Add Mobile Number
+                {mobileNumber ? "Change Mobile Number" : "Add Mobile Number"}
               </button>
+              
               {mobileNumber && (
-                <span style={{ fontSize: "14px", color: "#27ae60", fontWeight: "500" }}>
-                  ✓ {mobileNumber}
-                </span>
+                <div style={{ 
+                  padding: "10px 14px", 
+                  backgroundColor: "#f0f9f0", 
+                  border: "1px solid #27ae60",
+                  borderRadius: "6px", 
+                  fontSize: "15px",
+                  color: "#1e8449",
+                  fontWeight: "600"
+                }}>
+                  📱 Mobile Number: <strong>{mobileNumber}</strong>
+                </div>
               )}
             </div>
           </div>
@@ -347,7 +362,6 @@ export default function Ordering() {
       {/* Wings */}
       <div style={{ marginBottom: 30 }}>
         <h2>Chicken Wings</h2>
-
         <div style={{ display: "flex", gap: 10, marginBottom: 10 }}>
           <select value={wingQty} onChange={(e) => setWingQty(Number(e.target.value))}>
             {[1, 2, 3, 4, 5, 6].map((num) => (
@@ -356,13 +370,11 @@ export default function Ordering() {
               </option>
             ))}
           </select>
-
           <select value={wingFlavor} onChange={(e) => setWingFlavor(e.target.value)}>
             <option>BBQ</option>
             <option>Spicy</option>
             <option>Jerk</option>
           </select>
-
           <button onClick={addWings}>Add Wings</button>
         </div>
       </div>
@@ -370,7 +382,6 @@ export default function Ordering() {
       {/* Chicken Only */}
       <div style={{ marginBottom: 30 }}>
         <h2>Chicken Only</h2>
-
         <div style={{ display: "flex", gap: 10 }}>
           <select value={chickenQty} onChange={(e) => setChickenQty(Number(e.target.value))}>
             {[1, 2, 3, 4, 5, 6].map((num) => (
@@ -379,13 +390,11 @@ export default function Ordering() {
               </option>
             ))}
           </select>
-
           <select value={chickenFlavor} onChange={(e) => setChickenFlavor(e.target.value)}>
             <option>BBQ</option>
             <option>Spicy</option>
             <option>Jerk</option>
           </select>
-
           <button onClick={addChicken}>Add Chicken</button>
         </div>
       </div>
@@ -393,180 +402,79 @@ export default function Ordering() {
       {/* Chicken Meals */}
       <div style={{ marginBottom: 30 }}>
         <h2>Chicken Meals</h2>
-
-        <QuantitySelector 
-          title="BBQ Chicken Meal" 
-          unitPrice={320} 
-          addQuantityItem={addQuantityItem}
-          onInfoClick={openInfo}
-        />
-        <QuantitySelector 
-          title="Spicy Chicken Meal" 
-          unitPrice={320} 
-          addQuantityItem={addQuantityItem}
-          onInfoClick={openInfo}
-        />
-        <QuantitySelector 
-          title="Jerk Chicken Meal" 
-          unitPrice={320} 
-          addQuantityItem={addQuantityItem}
-          onInfoClick={openInfo}
-        />
-
-        <QuantitySelector 
-          title="Curry Chicken Meal" 
-          unitPrice={350} 
-          addQuantityItem={addQuantityItem}
-          onInfoClick={openInfo}
-        />
-        <QuantitySelector 
-          title="Curry Chicken" 
-          unitPrice={250} 
-          addQuantityItem={addQuantityItem}
-          onInfoClick={openInfo}
-        />
+        <QuantitySelector title="BBQ Chicken Meal" unitPrice={320} addQuantityItem={addQuantityItem} onInfoClick={openInfo} />
+        <QuantitySelector title="Spicy Chicken Meal" unitPrice={320} addQuantityItem={addQuantityItem} onInfoClick={openInfo} />
+        <QuantitySelector title="Jerk Chicken Meal" unitPrice={320} addQuantityItem={addQuantityItem} onInfoClick={openInfo} />
+        <QuantitySelector title="Curry Chicken Meal" unitPrice={350} addQuantityItem={addQuantityItem} onInfoClick={openInfo} />
+        <QuantitySelector title="Curry Chicken" unitPrice={250} addQuantityItem={addQuantityItem} onInfoClick={openInfo} />
       </div>
 
       {/* Liver */}
       <div style={{ marginBottom: 30 }}>
         <h2>Liver Dishes</h2>
-
-        <QuantitySelector 
-          title="Brown Stew Liver" 
-          unitPrice={230} 
-          addQuantityItem={addQuantityItem}
-          onInfoClick={openInfo}
-        />
-        <QuantitySelector 
-          title="Brown Stew Liver & Rice" 
-          unitPrice={300} 
-          addQuantityItem={addQuantityItem}
-          onInfoClick={openInfo}
-        />
+        <QuantitySelector title="Brown Stew Liver" unitPrice={230} addQuantityItem={addQuantityItem} onInfoClick={openInfo} />
+        <QuantitySelector title="Brown Stew Liver & Rice" unitPrice={300} addQuantityItem={addQuantityItem} onInfoClick={openInfo} />
       </div>
 
       {/* Fish Dishes */}
       <div style={{ marginBottom: 30 }}>
         <h2>Fish Dishes</h2>
-
-        <QuantitySelector 
-          title="Fry Fish Meal" 
-          unitPrice={350} 
-          addQuantityItem={addQuantityItem}
-          onInfoClick={openInfo}
-        />
-        <QuantitySelector 
-          title="Fry Fish" 
-          unitPrice={140} 
-          addQuantityItem={addQuantityItem}
-          onInfoClick={openInfo}
-        />
-        <QuantitySelector 
-          title="Jamaican Rundown Meal" 
-          unitPrice={350} 
-          addQuantityItem={addQuantityItem}
-          onInfoClick={openInfo}
-        />
-        <QuantitySelector 
-          title="Jamaican Rundown" 
-          unitPrice={250} 
-          addQuantityItem={addQuantityItem}
-          onInfoClick={openInfo}
-        />
-        <QuantitySelector 
-          title="Fish Fritters (3 Pieces)" 
-          unitPrice={100} 
-          addQuantityItem={addQuantityItem}
-          onInfoClick={openInfo}
-        />
+        <QuantitySelector title="Fry Fish Meal" unitPrice={350} addQuantityItem={addQuantityItem} onInfoClick={openInfo} />
+        <QuantitySelector title="Fry Fish" unitPrice={140} addQuantityItem={addQuantityItem} onInfoClick={openInfo} />
+        <QuantitySelector title="Jamaican Rundown Meal" unitPrice={350} addQuantityItem={addQuantityItem} onInfoClick={openInfo} />
+        <QuantitySelector title="Jamaican Rundown" unitPrice={250} addQuantityItem={addQuantityItem} onInfoClick={openInfo} />
+        <QuantitySelector title="Fish Fritters (3 Pieces)" unitPrice={100} addQuantityItem={addQuantityItem} onInfoClick={openInfo} />
       </div>
 
       {/* Sides */}
       <div style={{ marginBottom: 30 }}>
         <h2>Sides</h2>
-
-        <QuantitySelector 
-          title="Rice" 
-          unitPrice={100} 
-          addQuantityItem={addQuantityItem}
-          onInfoClick={openInfo}
-        />
-        <QuantitySelector 
-          title="Rice & Peas" 
-          unitPrice={120} 
-          addQuantityItem={addQuantityItem}
-          onInfoClick={openInfo}
-        />
-        <QuantitySelector 
-          title="Fries" 
-          unitPrice={80} 
-          addQuantityItem={addQuantityItem}
-          onInfoClick={openInfo}
-        />
-        <QuantitySelector 
-          title="Dumplin" 
-          unitPrice={110} 
-          addQuantityItem={addQuantityItem}
-          onInfoClick={openInfo}
-        />
-        <QuantitySelector 
-          title="Festival" 
-          unitPrice={130} 
-          addQuantityItem={addQuantityItem}
-          onInfoClick={openInfo}
-        />
+        <QuantitySelector title="Rice" unitPrice={100} addQuantityItem={addQuantityItem} onInfoClick={openInfo} />
+        <QuantitySelector title="Rice & Peas" unitPrice={120} addQuantityItem={addQuantityItem} onInfoClick={openInfo} />
+        <QuantitySelector title="Fries" unitPrice={80} addQuantityItem={addQuantityItem} onInfoClick={openInfo} />
+        <QuantitySelector title="Dumplin" unitPrice={110} addQuantityItem={addQuantityItem} onInfoClick={openInfo} />
+        <QuantitySelector title="Festival" unitPrice={130} addQuantityItem={addQuantityItem} onInfoClick={openInfo} />
       </div>
 
       {/* Drinks */}
       <div style={{ marginBottom: 30 }}>
         <h2>Drinks</h2>
-
-        <QuantitySelector 
-          title="Mama's Caribbean Healthy Sorrel Drink" 
-          unitPrice={150} 
-          addQuantityItem={addQuantityItem}
-          onInfoClick={openInfo}
-        />
-        <QuantitySelector 
-          title="Peanut Punch" 
-          unitPrice={150} 
-          addQuantityItem={addQuantityItem}
-          onInfoClick={openInfo}
-        />
+        <QuantitySelector title="Mama's Caribbean Healthy Sorrel Drink" unitPrice={150} addQuantityItem={addQuantityItem} onInfoClick={openInfo} />
+        <QuantitySelector title="Peanut Punch" unitPrice={150} addQuantityItem={addQuantityItem} onInfoClick={openInfo} />
       </div>
 
       {/* Desserts */}
       <div style={{ marginBottom: 30 }}>
         <h2>Desserts</h2>
-
-        <QuantitySelector 
-          title="Spiced Bun Slice" 
-          unitPrice={25} 
-          addQuantityItem={addQuantityItem}
-          onInfoClick={openInfo}
-        />
-        <QuantitySelector 
-          title="Caribbean Toto Coconut Cake Slice" 
-          unitPrice={45} 
-          addQuantityItem={addQuantityItem}
-          onInfoClick={openInfo}
-        />
+        <QuantitySelector title="Spiced Bun Slice" unitPrice={25} addQuantityItem={addQuantityItem} onInfoClick={openInfo} />
+        <QuantitySelector title="Caribbean Toto Coconut Cake Slice" unitPrice={45} addQuantityItem={addQuantityItem} onInfoClick={openInfo} />
       </div>
 
       {/* Cart */}
       <div style={{ marginBottom: 30 }}>
         <h2>Cart</h2>
-
         {cart.length === 0 && <p>No items added.</p>}
-
         {cart.map((item, index) => (
           <div key={index} style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
             <div>{item.name} - {item.price} EGP</div>
             <button onClick={() => removeFromCart(index)}>REMOVE</button>
           </div>
         ))}
-
         <h2>Total: {totalPrice} EGP</h2>
+
+        {/* Mobile number visible in cart for takeaway */}
+        {orderType === "Takeaway" && mobileNumber && (
+          <div style={{ 
+            marginTop: 15, 
+            padding: "10px", 
+            backgroundColor: "#f0f9f0", 
+            borderRadius: "6px",
+            border: "1px solid #27ae60",
+            fontSize: "15px"
+          }}>
+            <strong>📱 Customer Mobile:</strong> {mobileNumber}
+          </div>
+        )}
       </div>
 
       {/* Submit */}
@@ -577,7 +485,7 @@ export default function Ordering() {
         PLACE ORDER
       </button>
 
-      {/* ====================== MOBILE NUMBER MODAL ====================== */}
+      {/* Mobile Number Modal */}
       {showMobileModal && (
         <div style={{
           position: "fixed",
@@ -656,7 +564,7 @@ export default function Ordering() {
         </div>
       )}
 
-      {/* ====================== MAMA'S FRIENDLY BOT MODAL ====================== */}
+      {/* Dish Info Modal */}
       {modalItem && (
         <div style={{
           position: "fixed",
@@ -680,7 +588,6 @@ export default function Ordering() {
             boxShadow: "0 4px 20px rgba(0,0,0,0.3)"
           }}>
             <h3 style={{ marginTop: 0 }}>{modalItem.title}</h3>
-            
             <p><strong>Description:</strong> {modalItem.desc}</p>
             <p><strong>Calories:</strong> {modalItem.cal}</p>
             <p><strong>Allergy Info:</strong> {modalItem.allergy}</p>
@@ -708,7 +615,7 @@ export default function Ordering() {
   );
 }
 
-// Updated Quantity Component
+// QuantitySelector Component
 function QuantitySelector({ title, unitPrice, addQuantityItem, onInfoClick }) {
   const [qty, setQty] = useState(1);
 
@@ -738,10 +645,7 @@ function QuantitySelector({ title, unitPrice, addQuantityItem, onInfoClick }) {
         <button onClick={() => setQty(Math.max(1, qty - 1))}>-</button>
         <span>{qty}</span>
         <button onClick={() => setQty(qty + 1)}>+</button>
-
-        <button onClick={() => addQuantityItem(title, qty, unitPrice)}>
-          Add
-        </button>
+        <button onClick={() => addQuantityItem(title, qty, unitPrice)}>Add</button>
       </div>
     </div>
   );
