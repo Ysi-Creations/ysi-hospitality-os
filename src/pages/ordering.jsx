@@ -18,11 +18,11 @@ export default function Ordering() {
   const [pickupArea, setPickupArea] = useState("");
   const [landmark, setLandmark] = useState("");
 
-  // Mobile Number for Takeaway
+  // NEW: Mobile Number for Takeaway
   const [mobileNumber, setMobileNumber] = useState("");
   const [showMobileModal, setShowMobileModal] = useState(false);
 
-  // Modal State for Dish Info
+  // NEW: Modal State for Mama's Friendly Jamaican Food BOT
   const [modalItem, setModalItem] = useState(null);
 
   // Dish Information Database (Concise)
@@ -184,6 +184,7 @@ export default function Ordering() {
     });
   };
 
+  // NEW: Open Info Modal
   const openInfo = (title) => {
     setModalItem({
       title,
@@ -191,7 +192,7 @@ export default function Ordering() {
     });
   };
 
-  // Mobile Number Modal Handlers
+  // NEW: Mobile Number Modal Handlers
   const openMobileModal = () => {
     setShowMobileModal(true);
   };
@@ -206,13 +207,8 @@ export default function Ordering() {
 
   // Submit Order
   const placeOrder = async () => {
-    if (cart.length === 0) {
-      alert("Please select items.");
-      return;
-    }
-
-    if (orderType === "Eat In" && !table) {
-      alert("Please enter table number for Eat In orders.");
+    if (!table || cart.length === 0) {
+      alert("Please enter table number and select items.");
       return;
     }
 
@@ -222,14 +218,13 @@ export default function Ordering() {
     }
 
     const confirmOrder = window.confirm(
-      `PLEASE CONFIRM YOUR ORDER\n\n` +
-      `Table: ${orderType === "Eat In" ? table : "N/A"}\n` +
-      `Order Type: ${orderType}\n` +
-      (orderType === "Takeaway" 
-        ? `Pickup Area: ${pickupArea}\nLandmark: ${landmark}\nMobile Number: ${mobileNumber || "Not provided"}\n` 
-        : "") +
-      `\n${cart.map((item) => `${item.name} - ${item.price} EGP`).join("\n")}\n\n` +
-      `TOTAL: ${totalPrice} EGP`
+      `PLEASE CONFIRM YOUR ORDER\n\nTable: ${table}\nOrder Type: ${orderType}${
+        orderType === "Takeaway"
+          ? `\nPickup Area: ${pickupArea}\nLandmark: ${landmark}\nMobile: ${mobileNumber || "Not provided"}`
+          : ""
+      }\n\n${cart
+        .map((item) => `${item.name} - ${item.price} EGP`)
+        .join("\n")}\n\nTOTAL: ${totalPrice} EGP`
     );
 
     if (!confirmOrder) return;
@@ -240,11 +235,10 @@ export default function Ordering() {
     try {
       const { error } = await supabase.from("orders").insert([
         {
-          table_number: orderType === "Eat In" ? table : null,
+          table_number: table,
           order_type: orderType,
           pickup_area: orderType === "Takeaway" ? pickupArea : null,
           landmark: orderType === "Takeaway" ? landmark : null,
-          mobile_number: orderType === "Takeaway" ? mobileNumber : null,
           items: kitchenItems,
           drinks: drinkItems,
           total_price: totalPrice,
@@ -261,7 +255,6 @@ export default function Ordering() {
 
       alert("Thank you for placing your order!");
 
-      // Reset
       setCart([]);
       setTable("");
       setPickupArea("");
@@ -324,8 +317,8 @@ export default function Ordering() {
               style={{ display: "block", marginTop: 10, width: "100%", padding: 8 }}
             />
 
-            {/* Mobile Number - Always visible when set for takeaway */}
-            <div style={{ marginTop: 12 }}>
+            {/* NEW: Mobile Number Section under pickup area */}
+            <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 8 }}>
               <button
                 onClick={openMobileModal}
                 style={{
@@ -336,31 +329,21 @@ export default function Ordering() {
                   borderRadius: "6px",
                   fontSize: "14px",
                   cursor: "pointer",
-                  marginBottom: 8
+                  flexShrink: 0
                 }}
               >
-                {mobileNumber ? "Change Mobile Number" : "Add Mobile Number"}
+                Add Mobile Number
               </button>
-              
               {mobileNumber && (
-                <div style={{ 
-                  padding: "10px 14px", 
-                  backgroundColor: "#f0f9f0", 
-                  border: "1px solid #27ae60",
-                  borderRadius: "6px", 
-                  fontSize: "15px",
-                  color: "#1e8449",
-                  fontWeight: "600"
-                }}>
-                  📱 Mobile Number: <strong>{mobileNumber}</strong>
-                </div>
+                <span style={{ fontSize: "14px", color: "#27ae60", fontWeight: "500" }}>
+                  ✓ {mobileNumber}
+                </span>
               )}
             </div>
           </div>
         )}
       </div>
 
-      {/* Wings, Chicken Only, Meals, etc. ... (unchanged) */}
       {/* Wings */}
       <div style={{ marginBottom: 30 }}>
         <h2>Chicken Wings</h2>
@@ -584,20 +567,6 @@ export default function Ordering() {
         ))}
 
         <h2>Total: {totalPrice} EGP</h2>
-
-        {/* Mobile number also visible in cart area for takeaway orders */}
-        {orderType === "Takeaway" && mobileNumber && (
-          <div style={{ 
-            marginTop: 15, 
-            padding: "10px", 
-            backgroundColor: "#f0f9f0", 
-            borderRadius: "6px",
-            border: "1px solid #27ae60",
-            fontSize: "15px"
-          }}>
-            <strong>Customer Mobile:</strong> {mobileNumber}
-          </div>
-        )}
       </div>
 
       {/* Submit */}
@@ -608,7 +577,7 @@ export default function Ordering() {
         PLACE ORDER
       </button>
 
-      {/* Mobile Number Modal */}
+      {/* ====================== MOBILE NUMBER MODAL ====================== */}
       {showMobileModal && (
         <div style={{
           position: "fixed",
@@ -687,7 +656,7 @@ export default function Ordering() {
         </div>
       )}
 
-      {/* Dish Info Modal */}
+      {/* ====================== MAMA'S FRIENDLY BOT MODAL ====================== */}
       {modalItem && (
         <div style={{
           position: "fixed",
@@ -739,7 +708,7 @@ export default function Ordering() {
   );
 }
 
-// QuantitySelector Component
+// Updated Quantity Component
 function QuantitySelector({ title, unitPrice, addQuantityItem, onInfoClick }) {
   const [qty, setQty] = useState(1);
 
