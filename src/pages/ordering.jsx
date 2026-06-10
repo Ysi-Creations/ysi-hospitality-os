@@ -274,7 +274,7 @@ export default function Ordering() {
 
   return (
     <div style={{ padding: 20, maxWidth: 700, margin: "0 auto" }}>
-      <h1>Mama's Jamaican Kitchen</h1>
+      <h1>Welcome To Mama's Jamaican Kitchen</h1>
 
       {/* Table - kept always visible per rules (only validation changed) */}
       <div style={{ marginBottom: 20 }}>
