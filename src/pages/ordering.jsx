@@ -207,8 +207,13 @@ export default function Ordering() {
 
   // Submit Order
   const placeOrder = async () => {
-    if (!table || cart.length === 0) {
-      alert("Please enter table number and select items.");
+    if (cart.length === 0) {
+      alert("Please select items.");
+      return;
+    }
+
+    if (orderType === "Eat In" && !table) {
+      alert("Please enter table number for Eat In orders.");
       return;
     }
 
@@ -218,7 +223,7 @@ export default function Ordering() {
     }
 
     const confirmOrder = window.confirm(
-      `PLEASE CONFIRM YOUR ORDER\n\nTable: ${table}\nOrder Type: ${orderType}${
+      `PLEASE CONFIRM YOUR ORDER\n\nTable: ${orderType === "Eat In" ? table : "N/A"}\nOrder Type: ${orderType}${
         orderType === "Takeaway"
           ? `\nPickup Area: ${pickupArea}\nLandmark: ${landmark}\nMobile: ${mobileNumber || "Not provided"}`
           : ""
@@ -235,7 +240,7 @@ export default function Ordering() {
     try {
       const { error } = await supabase.from("orders").insert([
         {
-          table_number: table,
+          table_number: orderType === "Eat In" ? table : null,
           order_type: orderType,
           pickup_area: orderType === "Takeaway" ? pickupArea : null,
           landmark: orderType === "Takeaway" ? landmark : null,
@@ -271,7 +276,7 @@ export default function Ordering() {
     <div style={{ padding: 20, maxWidth: 700, margin: "0 auto" }}>
       <h1>Mama's Jamaican Kitchen</h1>
 
-      {/* Table */}
+      {/* Table - kept always visible per rules (only validation changed) */}
       <div style={{ marginBottom: 20 }}>
         <input
           type="text"
@@ -317,8 +322,8 @@ export default function Ordering() {
               style={{ display: "block", marginTop: 10, width: "100%", padding: 8 }}
             />
 
-            {/* NEW: Mobile Number Section under pickup area */}
-            <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 8 }}>
+            {/* Mobile Number Section under pickup area - always visible when saved */}
+            <div style={{ marginTop: 12 }}>
               <button
                 onClick={openMobileModal}
                 style={{
@@ -329,15 +334,23 @@ export default function Ordering() {
                   borderRadius: "6px",
                   fontSize: "14px",
                   cursor: "pointer",
-                  flexShrink: 0
+                  marginBottom: mobileNumber ? 8 : 0
                 }}
               >
-                Add Mobile Number
+                {mobileNumber ? "Change Mobile Number" : "Add Mobile Number"}
               </button>
               {mobileNumber && (
-                <span style={{ fontSize: "14px", color: "#27ae60", fontWeight: "500" }}>
-                  ✓ {mobileNumber}
-                </span>
+                <div style={{ 
+                  padding: "8px 12px", 
+                  backgroundColor: "#f0f9f0", 
+                  borderRadius: "6px", 
+                  fontSize: "14px",
+                  color: "#27ae60",
+                  fontWeight: "500",
+                  border: "1px solid #d4edda"
+                }}>
+                  Mobile: {mobileNumber}
+                </div>
               )}
             </div>
           </div>
