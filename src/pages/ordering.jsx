@@ -18,6 +18,10 @@ export default function Ordering() {
   const [pickupArea, setPickupArea] = useState("");
   const [landmark, setLandmark] = useState("");
 
+  // NEW: Mobile Number for Takeaway
+  const [mobileNumber, setMobileNumber] = useState("");
+  const [showMobileModal, setShowMobileModal] = useState(false);
+
   // NEW: Modal State for Mama's Friendly Jamaican Food BOT
   const [modalItem, setModalItem] = useState(null);
 
@@ -188,6 +192,19 @@ export default function Ordering() {
     });
   };
 
+  // NEW: Mobile Number Modal Handlers
+  const openMobileModal = () => {
+    setShowMobileModal(true);
+  };
+
+  const closeMobileModal = () => {
+    setShowMobileModal(false);
+  };
+
+  const saveMobileNumber = () => {
+    closeMobileModal();
+  };
+
   // Submit Order
   const placeOrder = async () => {
     if (!table || cart.length === 0) {
@@ -203,7 +220,7 @@ export default function Ordering() {
     const confirmOrder = window.confirm(
       `PLEASE CONFIRM YOUR ORDER\n\nTable: ${table}\nOrder Type: ${orderType}${
         orderType === "Takeaway"
-          ? `\nPickup Area: ${pickupArea}\nLandmark: ${landmark}`
+          ? `\nPickup Area: ${pickupArea}\nLandmark: ${landmark}\nMobile: ${mobileNumber || "Not provided"}`
           : ""
       }\n\n${cart
         .map((item) => `${item.name} - ${item.price} EGP`)
@@ -242,6 +259,7 @@ export default function Ordering() {
       setTable("");
       setPickupArea("");
       setLandmark("");
+      setMobileNumber("");
       setOrderType("Eat In");
     } catch (err) {
       console.error("Unexpected Error:", err);
@@ -298,6 +316,30 @@ export default function Ordering() {
               onChange={(e) => setLandmark(e.target.value)}
               style={{ display: "block", marginTop: 10, width: "100%", padding: 8 }}
             />
+
+            {/* NEW: Mobile Number Section under pickup area */}
+            <div style={{ marginTop: 12, display: "flex", alignItems: "center", gap: 8 }}>
+              <button
+                onClick={openMobileModal}
+                style={{
+                  padding: "10px 16px",
+                  backgroundColor: "#27ae60",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontSize: "14px",
+                  cursor: "pointer",
+                  flexShrink: 0
+                }}
+              >
+                Add Mobile Number
+              </button>
+              {mobileNumber && (
+                <span style={{ fontSize: "14px", color: "#27ae60", fontWeight: "500" }}>
+                  ✓ {mobileNumber}
+                </span>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -534,6 +576,85 @@ export default function Ordering() {
       >
         PLACE ORDER
       </button>
+
+      {/* ====================== MOBILE NUMBER MODAL ====================== */}
+      {showMobileModal && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          backgroundColor: "rgba(0,0,0,0.6)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 1000,
+          padding: "15px"
+        }}>
+          <div style={{
+            backgroundColor: "white",
+            borderRadius: "12px",
+            padding: "24px",
+            maxWidth: "340px",
+            width: "100%",
+            boxShadow: "0 4px 20px rgba(0,0,0,0.3)"
+          }}>
+            <h3 style={{ marginTop: 0, marginBottom: 16 }}>Mobile Number</h3>
+            <p style={{ marginBottom: 16, fontSize: "14px", color: "#555" }}>
+              We'll use this to notify you about your takeaway order.
+            </p>
+            
+            <input
+              type="tel"
+              placeholder="Enter mobile number (e.g. 01012345678)"
+              value={mobileNumber}
+              onChange={(e) => setMobileNumber(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "12px",
+                fontSize: "16px",
+                border: "1px solid #ddd",
+                borderRadius: "6px",
+                marginBottom: "20px"
+              }}
+            />
+
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button 
+                onClick={closeMobileModal}
+                style={{
+                  flex: 1,
+                  padding: "12px",
+                  backgroundColor: "#95a5a6",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontSize: "16px",
+                  cursor: "pointer"
+                }}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={saveMobileNumber}
+                style={{
+                  flex: 1,
+                  padding: "12px",
+                  backgroundColor: "#27ae60",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "6px",
+                  fontSize: "16px",
+                  cursor: "pointer"
+                }}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ====================== MAMA'S FRIENDLY BOT MODAL ====================== */}
       {modalItem && (
