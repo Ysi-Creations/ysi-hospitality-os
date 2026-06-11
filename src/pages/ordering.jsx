@@ -542,8 +542,8 @@ export default function Ordering() {
         />
         <QuantitySelector 
           title="Peanut Punch" 
-          unitPrice={150} 
-          addQuantityItem={addQuantityItem}
+          unitPrice={180} 
+          addQuantityItem m={addQuantityItem}
           onInfoClick={openInfo}
         />
       </div>
