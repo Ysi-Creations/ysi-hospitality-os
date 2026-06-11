@@ -154,10 +154,12 @@ export default function Admin() {
               </p>
 
               {/* Customer Mobile Number - Always visible for takeaway orders */}
-              <p>
-                <strong>Customer Mobile:</strong>{" "}
-                {o.mobile || o.customer_mobile || o.phone_number || o.phone || "Not provided"}
-              </p>
+              {(o.mobile || o.customer_mobile || o.phone_number || o.phone || o.customer_phone) && (
+                <p>
+                  <strong>Customer Mobile:</strong>{" "}
+                  {o.mobile || o.customer_mobile || o.phone_number || o.phone || o.customer_phone}
+                </p>
+              )}
             </>
           )}
 
