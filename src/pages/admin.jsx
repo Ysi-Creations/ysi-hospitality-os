@@ -152,6 +152,12 @@ export default function Admin() {
                 <strong>Landmark:</strong>{" "}
                 {o.landmark}
               </p>
+
+              {/* Customer Mobile Number - Always visible for takeaway orders */}
+              <p>
+                <strong>Customer Mobile:</strong>{" "}
+                {o.mobile || o.customer_mobile || o.phone_number || o.phone || "Not provided"}
+              </p>
             </>
           )}
 
