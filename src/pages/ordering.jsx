@@ -249,6 +249,7 @@ export default function Ordering() {
           order_type: orderType,
           pickup_area: orderType === "Takeaway" ? pickupArea : null,
           landmark: orderType === "Takeaway" ? landmark : null,
+          mobile_number: orderType === "Takeaway" ? mobileNumber : null,
           items: kitchenItems,
           drinks: drinkItems,
           total_price: totalPrice,
