@@ -168,6 +168,11 @@ export default function Admin() {
           )}
         </div>
       ))}
+
+      {/* Copyright and Branding */}
+      <p style={{ textAlign: "center", marginTop: 40, fontSize: "14px", color: "#666" }}>
+        © 2026 Mama's Jamaican Kitchen Meals — All Rights Reserved. Powered by Ysi Creations.
+      </p>
     </div>
   );
 }
