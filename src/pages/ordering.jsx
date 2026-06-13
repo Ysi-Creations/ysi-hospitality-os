@@ -133,7 +133,7 @@ export default function Ordering() {
       allergy: "Gluten, Coconut"
     },
     "Red Pea Soup": {
-      desc: "Traditional Jamaican red pea soup with vegetables, spices and dumplins",
+      desc: "Traditional Jamaican red pea soup with vegetables, spices and Dumplins,without meat",
       cal: "380 kcal",
       allergy: "None"
     }
