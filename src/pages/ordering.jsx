@@ -133,7 +133,7 @@ export default function Ordering() {
       allergy: "Gluten, Coconut"
     },
     "Red Pea Soup": {
-      desc: "Traditional Jamaican red pea soup with vegetables, spices and Dumplins,without meat",
+      desc: "Traditional Jamaican red pea soup with vegetables, spices and tender meat",
       cal: "380 kcal",
       allergy: "None"
     }
@@ -249,7 +249,6 @@ export default function Ordering() {
           order_type: orderType,
           pickup_area: orderType === "Takeaway" ? pickupArea : null,
           landmark: orderType === "Takeaway" ? landmark : null,
-          mobile_number: orderType === "Takeaway" ? mobileNumber : null,
           items: kitchenItems,
           drinks: drinkItems,
           total_price: totalPrice,
