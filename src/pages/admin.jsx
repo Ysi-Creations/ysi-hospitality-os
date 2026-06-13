@@ -153,10 +153,10 @@ export default function Admin() {
                 {o.landmark}
               </p>
 
-              {/* Customer Mobile Number - Visible only for takeaway orders */}
+              {/* Customer Mobile Number - FIXED */}
               <p>
                 <strong>Customer Mobile:</strong>{" "}
-                {o.mobile || o.customer_mobile || o.phone_number || o.phone || "Not provided"}
+                {o.mobile_number || "Not provided"}
               </p>
             </>
           )}
