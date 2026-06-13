@@ -131,6 +131,11 @@ export default function Ordering() {
       desc: "Moist coconut cake with spices",
       cal: "240 kcal",
       allergy: "Gluten, Coconut"
+    },
+    "Red Pea Soup": {
+      desc: "Traditional Jamaican red pea soup with vegetables, spices and dumplins",
+      cal: "380 kcal",
+      allergy: "None"
     }
   };
 
@@ -244,6 +249,7 @@ export default function Ordering() {
           order_type: orderType,
           pickup_area: orderType === "Takeaway" ? pickupArea : null,
           landmark: orderType === "Takeaway" ? landmark : null,
+          mobile_number: orderType === "Takeaway" ? mobileNumber : null,
           items: kitchenItems,
           drinks: drinkItems,
           total_price: totalPrice,
@@ -525,6 +531,12 @@ export default function Ordering() {
         <QuantitySelector 
           title="Festival" 
           unitPrice={130} 
+          addQuantityItem={addQuantityItem}
+          onInfoClick={openInfo}
+        />
+        <QuantitySelector 
+          title="Red Pea Soup" 
+          unitPrice={250} 
           addQuantityItem={addQuantityItem}
           onInfoClick={openInfo}
         />
